@@ -433,6 +433,7 @@
       label:  "Mobile page speed",
       color:  "#00B4A6",
       extraFn: d => {
+        if (d.speedNote) return d.speedNote;
         const parts = [];
         if (d.fcp) parts.push(`FCP ${d.fcp}`);
         if (d.lcp) parts.push(`LCP ${d.lcp}`);
@@ -488,10 +489,25 @@
     window.open(dest, "_blank");
   }
 
+  function fixUrl(raw) {
+    if (!raw) return "";
+    let u = raw.trim();
+    // Fix missing colon: https// → https://
+    u = u.replace(/^(https?)\/{2}/, "$1://");
+    // Add https:// if no protocol at all
+    if (u && !/^https?:\/\//i.test(u)) u = "https://" + u;
+    // Remove trailing slash for consistency
+    u = u.replace(/\/+$/, "");
+    return u;
+  }
+
   async function runScore() {
     const biz     = document.getElementById("biz").value.trim();
     const city    = document.getElementById("city").value.trim();
-    const siteUrl = document.getElementById("siteUrl").value.trim();
+    const siteUrl = fixUrl(document.getElementById("siteUrl").value);
+
+    // Update the input so user sees the corrected URL
+    if (siteUrl) document.getElementById("siteUrl").value = siteUrl;
 
     if (!biz)  { shake("biz");  return; }
     if (!city) { shake("city"); return; }

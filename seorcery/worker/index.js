@@ -137,16 +137,42 @@ export default {
             `?url=${encodeURIComponent(siteUrl)}&strategy=mobile&key=${apiKey}`;
           const psRes  = await fetch(psUrl);
           const psData = await psRes.json();
-          const score  = psData.lighthouseResult?.categories?.performance?.score;
-          results.speed       = score != null ? Math.round(score * 100) : null;
-          results.speedTested = true;
 
-          const audits = psData.lighthouseResult?.audits;
-          if (audits) {
-            const fcp = audits["first-contentful-paint"]?.displayValue;
-            const lcp = audits["largest-contentful-paint"]?.displayValue;
-            if (fcp) results.fcp = fcp;
-            if (lcp) results.lcp = lcp;
+          if (psData.error) {
+            // PageSpeed couldn't reach the site — that's still useful data
+            const msg = psData.error.message || "";
+            if (msg.includes("FAILED_DOCUMENT_REQUEST") || msg.includes("ERR_CONNECTION")) {
+              results.speed       = 5;
+              results.speedTested = true;
+              results.speedNote   = "Site unreachable by Google";
+            } else if (msg.includes("DNS_FAILURE")) {
+              results.speed       = 5;
+              results.speedTested = true;
+              results.speedNote   = "DNS failure — site may be down";
+            } else {
+              results.speed       = 10;
+              results.speedTested = true;
+              results.speedNote   = "Could not analyze site";
+            }
+          } else {
+            const score = psData.lighthouseResult?.categories?.performance?.score;
+            results.speed       = score != null ? Math.round(score * 100) : null;
+            results.speedTested = true;
+
+            // Pull extra metrics + store Lighthouse vitals for CrUX fallback
+            const audits = psData.lighthouseResult?.audits;
+            if (audits) {
+              const fcp = audits["first-contentful-paint"]?.displayValue;
+              const lcp = audits["largest-contentful-paint"]?.displayValue;
+              if (fcp) results.fcp = fcp;
+              if (lcp) results.lcp = lcp;
+
+              // Store raw Lighthouse vitals for CrUX fallback
+              results._lhLcp = audits["largest-contentful-paint"]?.numericValue;
+              results._lhCls = audits["cumulative-layout-shift"]?.numericValue;
+              results._lhInp = audits["interaction-to-next-paint"]?.numericValue
+                            || audits["total-blocking-time"]?.numericValue; // TBT as INP proxy
+            }
           }
         } catch (e) {
           results.speed       = null;
@@ -216,10 +242,40 @@ export default {
             results.vitalsTested  = true;
             results.vitalsDetails = vitalsDetails;
           } else {
-            // Not enough traffic for CrUX data
-            results.vitals       = null;
-            results.vitalsTested = true;
-            results.vitalsNote   = "Not enough traffic data";
+            // No CrUX data — fall back to Lighthouse metrics
+            if (results._lhLcp != null) {
+              let vitals = 0;
+              const vitalsDetails = [];
+
+              const lcpMs = results._lhLcp;
+              if (lcpMs <= 2500)      { vitals += 35; vitalsDetails.push(`LCP ${(lcpMs/1000).toFixed(1)}s ✓`); }
+              else if (lcpMs <= 4000) { vitals += 20; vitalsDetails.push(`LCP ${(lcpMs/1000).toFixed(1)}s`); }
+              else                    { vitals += 5;  vitalsDetails.push(`LCP ${(lcpMs/1000).toFixed(1)}s ✗`); }
+
+              const clsVal = results._lhCls;
+              if (clsVal != null) {
+                if (clsVal <= 0.1)      { vitals += 30; vitalsDetails.push(`CLS ${clsVal.toFixed(2)} ✓`); }
+                else if (clsVal <= 0.25) { vitals += 15; vitalsDetails.push(`CLS ${clsVal.toFixed(2)}`); }
+                else                     { vitals += 5;  vitalsDetails.push(`CLS ${clsVal.toFixed(2)} ✗`); }
+              }
+
+              // Use TBT as INP proxy (good < 200ms)
+              const tbt = results._lhInp;
+              if (tbt != null) {
+                if (tbt <= 200)      { vitals += 35; vitalsDetails.push(`TBT ${Math.round(tbt)}ms ✓`); }
+                else if (tbt <= 600) { vitals += 20; vitalsDetails.push(`TBT ${Math.round(tbt)}ms`); }
+                else                 { vitals += 5;  vitalsDetails.push(`TBT ${Math.round(tbt)}ms ✗`); }
+              }
+
+              vitalsDetails.push("(from Lighthouse)");
+              results.vitals        = Math.min(vitals, 100);
+              results.vitalsTested  = true;
+              results.vitalsDetails = vitalsDetails;
+            } else {
+              results.vitals       = null;
+              results.vitalsTested = true;
+              results.vitalsNote   = "Site unreachable for analysis";
+            }
           }
         } catch (e) {
           results.vitals       = null;
@@ -230,6 +286,11 @@ export default {
         results.vitals       = null;
         results.vitalsTested = false;
       }
+
+      // Clean up internal Lighthouse fields
+      delete results._lhLcp;
+      delete results._lhCls;
+      delete results._lhInp;
 
       // ── 4. Keyword alignment ─────────────────────────────
       if (siteUrl && siteFetchOk && siteHtml) {
