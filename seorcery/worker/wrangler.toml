@@ -1,0 +1,5 @@
+name = "seorcery-proxy"
+main = "index.js"
+compatibility_date = "2024-01-01"
+
+# API key is stored as an encrypted secret via: wrangler secret put GOOGLE_API_KEY
