@@ -386,7 +386,7 @@
     </div>
 
     <div class="footer-note">
-      Citation consistency is estimated. Speed + keyword checks require a website URL.
+      Citation consistency is estimated. Speed, vitals, keywords &amp; technical checks require a website URL.
     </div>
 
   </div>
@@ -407,7 +407,7 @@
   // ================================================================
   //  ⬇️  STEP 2: Replace with your contact email or VLS contact URL
   // ================================================================
-  const CTA_URL = "mailto:rruss7997@gmail.com?subject=SEO Fix Plan Request";
+  const CTA_URL = "https://vlsmarketing.net/";
   // Or use: "https://vlsmarketing.net/contact"
 
   // ================================================================
@@ -440,12 +440,34 @@
       },
     },
     {
+      key:    "vitals",
+      label:  "Core Web Vitals",
+      color:  "#E04E9B",
+      extraFn: d => {
+        if (!d.vitalsTested) return "Add website URL to check";
+        if (d.vitalsDetails?.length > 0) return d.vitalsDetails.join(" · ");
+        if (d.vitalsNote) return d.vitalsNote;
+        return "";
+      },
+    },
+    {
       key:    "keywords",
       label:  "Local keyword alignment",
       color:  "#7C3AED",
       extraFn: d => {
         if (!d.keywordTested) return "Add website URL to check";
+        if (d.keywordDetails?.length > 0) return d.keywordDetails.slice(0, 3).join(" · ");
         if (d.cityOccurrences != null) return `City term found ${d.cityOccurrences}× on page`;
+        return "";
+      },
+    },
+    {
+      key:    "techSeo",
+      label:  "Technical SEO",
+      color:  "#2563EB",
+      extraFn: d => {
+        if (!d.techSeoTested) return "Add website URL to check";
+        if (d.techSeoDetails?.length > 0) return d.techSeoDetails.slice(0, 3).join(" · ");
         return "";
       },
     },
@@ -579,11 +601,15 @@
     if (d.gbp != null && d.gbp < 50)              addTag("Incomplete GBP profile", "tag-warn");
     if (d.reviews != null && d.reviews < 40)      addTag("Few or no reviews", "tag-warn");
     if (d.speed != null && d.speed < 50)          addTag("Slow mobile speed", "tag-warn");
+    if (d.vitals != null && d.vitals < 50)        addTag("Poor Core Web Vitals", "tag-warn");
     if (d.keywords != null && d.keywords < 40)    addTag("Weak local keywords", "tag-warn");
+    if (d.techSeo != null && d.techSeo < 50)      addTag("Technical SEO issues", "tag-warn");
     if (d.gbp != null && d.gbp >= 80)             addTag("Strong GBP", "tag-ok");
     if (d.reviews != null && d.reviews >= 70)     addTag("Active reviews", "tag-ok");
     if (d.speed != null && d.speed >= 75)         addTag("Fast mobile site", "tag-ok");
+    if (d.vitals != null && d.vitals >= 75)       addTag("Good Web Vitals", "tag-ok");
     if (d.keywords != null && d.keywords >= 70)   addTag("Good keyword coverage", "tag-ok");
+    if (d.techSeo != null && d.techSeo >= 75)     addTag("Solid technical SEO", "tag-ok");
     if (!d.speedTested)                           addTag("Speed not checked (no URL)", "tag-info");
     if (!d.keywordTested)                         addTag("Keywords not checked (no URL)", "tag-info");
 
@@ -593,7 +619,9 @@
     else if (d.gbp < 60)                       topIssues.push("completing your GBP profile");
     if (d.reviews != null && d.reviews < 50)   topIssues.push("building your review stream");
     if (d.speed != null && d.speed < 50)       topIssues.push("improving mobile page speed");
+    if (d.vitals != null && d.vitals < 50)     topIssues.push("fixing Core Web Vitals");
     if (d.keywords != null && d.keywords < 50) topIssues.push("adding local keywords to your site");
+    if (d.techSeo != null && d.techSeo < 60)   topIssues.push("fixing technical SEO basics");
 
     document.getElementById("cta-headline").textContent =
       overall >= 75 ? `${biz} is performing well!` :

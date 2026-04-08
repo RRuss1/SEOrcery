@@ -44,8 +44,25 @@ export default {
 
       const results = {};
 
+      // ── Fetch site HTML once (reused for keywords + tech SEO) ──
+      let siteHtml = null;
+      let siteFetchOk = false;
+      if (siteUrl) {
+        try {
+          const siteRes = await fetch(siteUrl, {
+            headers: {
+              "User-Agent": "Mozilla/5.0 (compatible; SEOrceryBot/1.0; +https://seorcery.dev)"
+            },
+            redirect: "follow",
+          });
+          siteHtml = await siteRes.text();
+          siteFetchOk = true;
+        } catch (e) {
+          results.siteFetchError = e.message;
+        }
+      }
+
       // ── 1. Google Places API (New) ─────────────────────────
-      // Uses the Places API (New) Text Search endpoint
       try {
         const fieldMask = [
           "places.displayName",
@@ -74,15 +91,13 @@ export default {
         const place      = placesData.places?.[0];
 
         if (place && place.businessStatus !== "CLOSED_PERMANENTLY") {
-          // GBP completeness: max 100
-          let gbp = 30; // base — found on Google at all
-          if (place.rating)                       gbp += 15; // has ratings
-          if (place.regularOpeningHours)          gbp += 20; // hours set
-          if (place.photos?.length >= 3)          gbp += 20; // has photos
-          if (place.websiteUri)                   gbp += 15; // website linked
+          let gbp = 30;
+          if (place.rating)                       gbp += 15;
+          if (place.regularOpeningHours)          gbp += 20;
+          if (place.photos?.length >= 3)          gbp += 20;
+          if (place.websiteUri)                   gbp += 15;
           results.gbp = Math.min(gbp, 100);
 
-          // Review health: count + rating
           const count  = place.userRatingCount || 0;
           const rating = place.rating || 0;
           let reviews  = 0;
@@ -101,7 +116,6 @@ export default {
           results.hasHours    = !!place.regularOpeningHours;
 
         } else {
-          // Business not found on Google — that itself is a big SEO issue
           results.gbp         = 5;
           results.reviews     = 5;
           results.placesFound = false;
@@ -116,19 +130,17 @@ export default {
       }
 
       // ── 2. PageSpeed Insights ────────────────────────────
-      // No API key required — completely free
       if (siteUrl) {
         try {
           const psUrl =
             `https://www.googleapis.com/pagespeedonline/v5/runPagespeed` +
-            `?url=${encodeURIComponent(siteUrl)}&strategy=mobile`;
+            `?url=${encodeURIComponent(siteUrl)}&strategy=mobile&key=${apiKey}`;
           const psRes  = await fetch(psUrl);
           const psData = await psRes.json();
           const score  = psData.lighthouseResult?.categories?.performance?.score;
           results.speed       = score != null ? Math.round(score * 100) : null;
           results.speedTested = true;
 
-          // Pull a few extra metrics if available
           const audits = psData.lighthouseResult?.audits;
           if (audits) {
             const fcp = audits["first-contentful-paint"]?.displayValue;
@@ -146,58 +158,154 @@ export default {
         results.speedTested = false;
       }
 
-      // ── 3. Keyword alignment ─────────────────────────────
-      // Fetches their real website and checks for local SEO signals
+      // ── 3. Chrome UX Report (Core Web Vitals) ────────────
+      // Try exact URL first, then fall back to origin-level data
       if (siteUrl) {
         try {
-          const siteRes = await fetch(siteUrl, {
-            headers: {
-              "User-Agent": "Mozilla/5.0 (compatible; SEOrceryBot/1.0; +https://seorcery.dev)"
-            },
-            // Don't follow infinite redirects
-            redirect: "follow",
-          });
+          const cruxEndpoint = `https://chromeuxreport.googleapis.com/v1/records:queryRecord?key=${apiKey}`;
+          const cruxHeaders  = { "Content-Type": "application/json" };
 
-          const html       = await siteRes.text();
-          const lower      = html.toLowerCase();
-          const cityLower  = city.toLowerCase();
+          let cruxRes = await fetch(cruxEndpoint, {
+            method: "POST", headers: cruxHeaders,
+            body: JSON.stringify({ url: siteUrl }),
+          });
+          let cruxData = await cruxRes.json();
+
+          // Fall back to origin if URL-level has no data
+          if (!cruxData.record?.metrics) {
+            const origin = new URL(siteUrl).origin;
+            cruxRes  = await fetch(cruxEndpoint, {
+              method: "POST", headers: cruxHeaders,
+              body: JSON.stringify({ origin }),
+            });
+            cruxData = await cruxRes.json();
+          }
+
+          const metrics = cruxData.record?.metrics;
+
+          if (metrics) {
+            let vitals = 0;
+            const vitalsDetails = [];
+
+            // LCP — Largest Contentful Paint (good < 2500ms)
+            const lcpMs = metrics.largest_contentful_paint?.percentiles?.p75;
+            if (lcpMs != null) {
+              if (lcpMs <= 2500)      { vitals += 35; vitalsDetails.push(`LCP ${(lcpMs/1000).toFixed(1)}s ✓`); }
+              else if (lcpMs <= 4000) { vitals += 20; vitalsDetails.push(`LCP ${(lcpMs/1000).toFixed(1)}s`); }
+              else                    { vitals += 5;  vitalsDetails.push(`LCP ${(lcpMs/1000).toFixed(1)}s ✗`); }
+            }
+
+            // INP — Interaction to Next Paint (good < 200ms)
+            const inpMs = metrics.interaction_to_next_paint?.percentiles?.p75;
+            if (inpMs != null) {
+              if (inpMs <= 200)      { vitals += 35; vitalsDetails.push(`INP ${inpMs}ms ✓`); }
+              else if (inpMs <= 500) { vitals += 20; vitalsDetails.push(`INP ${inpMs}ms`); }
+              else                   { vitals += 5;  vitalsDetails.push(`INP ${inpMs}ms ✗`); }
+            }
+
+            // CLS — Cumulative Layout Shift (good < 0.1)
+            const cls = metrics.cumulative_layout_shift?.percentiles?.p75;
+            if (cls != null) {
+              const clsVal = cls / 100; // CrUX returns CLS * 100
+              if (clsVal <= 0.1)      { vitals += 30; vitalsDetails.push(`CLS ${clsVal.toFixed(2)} ✓`); }
+              else if (clsVal <= 0.25) { vitals += 15; vitalsDetails.push(`CLS ${clsVal.toFixed(2)}`); }
+              else                     { vitals += 5;  vitalsDetails.push(`CLS ${clsVal.toFixed(2)} ✗`); }
+            }
+
+            results.vitals        = Math.min(vitals, 100);
+            results.vitalsTested  = true;
+            results.vitalsDetails = vitalsDetails;
+          } else {
+            // Not enough traffic for CrUX data
+            results.vitals       = null;
+            results.vitalsTested = true;
+            results.vitalsNote   = "Not enough traffic data";
+          }
+        } catch (e) {
+          results.vitals       = null;
+          results.vitalsTested = false;
+          results.vitalsError  = e.message;
+        }
+      } else {
+        results.vitals       = null;
+        results.vitalsTested = false;
+      }
+
+      // ── 4. Keyword alignment ─────────────────────────────
+      if (siteUrl && siteFetchOk && siteHtml) {
+        try {
+          const html  = siteHtml;
+          const lower = html.toLowerCase();
+          const cityLower = city.toLowerCase();
+
+          const stopWords = new Set(["the","and","for","of","in","a","an","to","is","at","on","or"]);
           const cityTokens = cityLower
             .split(/[\s,]+/)
-            .filter(w => w.length > 2 && !["the","and","for","fl","ca","tx","ny"].includes(w));
+            .filter(w => w.length > 2 && !stopWords.has(w));
+          const fullCity = cityTokens.join(" ");
 
-          let kw = 0;
+          const body = lower
+            .replace(/<style[\s\S]*?<\/style>/gi, "")
+            .replace(/<script[\s\S]*?<\/script>/gi, "")
+            .replace(/<[^>]+>/g, " ");
 
-          // Title tag — highest signal
           const titleM = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
           const title  = titleM ? titleM[1].toLowerCase() : "";
-          if (cityTokens.some(w => title.includes(w))) kw += 30;
 
-          // Meta description
           const metaM = html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)/i)
                       || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']description["']/i);
           const meta  = metaM ? metaM[1].toLowerCase() : "";
-          if (cityTokens.some(w => meta.includes(w))) kw += 20;
 
-          // H1 tag
           const h1M = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
           const h1  = h1M ? h1M[1].replace(/<[^>]+>/g, "").toLowerCase() : "";
-          if (cityTokens.some(w => h1.includes(w))) kw += 25;
 
-          // Body text frequency
-          const body = lower.replace(/<style[\s\S]*?<\/style>/gi, "")
-                            .replace(/<script[\s\S]*?<\/script>/gi, "")
-                            .replace(/<[^>]+>/g, " ");
+          const hTags = [...html.matchAll(/<h[23][^>]*>([\s\S]*?)<\/h[23]>/gi)]
+            .map(m => m[1].replace(/<[^>]+>/g, "").toLowerCase())
+            .join(" ");
+
+          const hasLocalSchema = lower.includes("localbusiness") || lower.includes("local_business");
+          const hasPhone   = /\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/.test(body);
+          const hasAddress = /\d+\s+[\w\s]+(?:st|street|ave|avenue|blvd|boulevard|rd|road|dr|drive|ln|lane|way|ct|court)\b/i.test(body);
+          const hasGeoMeta = lower.includes('name="geo') || lower.includes("maps.google") || lower.includes("google.com/maps");
+
+          let kw = 0;
+          const details = [];
+
+          if (fullCity && title.includes(fullCity)) {
+            kw += 20; details.push("City in title");
+          } else if (cityTokens.some(w => title.includes(w))) {
+            kw += 12; details.push("Partial city in title");
+          }
+
+          if (cityTokens.some(w => meta.includes(w))) {
+            kw += 12; details.push("City in meta description");
+          }
+
+          if (cityTokens.some(w => h1.includes(w))) {
+            kw += 15; details.push("City in H1");
+          }
+
+          if (cityTokens.some(w => hTags.includes(w))) {
+            kw += 8; details.push("City in subheadings");
+          }
+
           const occurrences = cityTokens.reduce((acc, w) => {
             const m = body.match(new RegExp(`\\b${w}\\b`, "g"));
             return acc + (m ? m.length : 0);
           }, 0);
-          if (occurrences > 3)  kw += 10;
-          if (occurrences > 10) kw += 10;
-          if (occurrences > 20) kw += 5;
+          if (occurrences > 2)  kw += 5;
+          if (occurrences > 8)  kw += 5;
+          if (occurrences > 15) kw += 5;
 
-          results.keywords      = Math.min(kw, 100);
-          results.keywordTested = true;
+          if (hasPhone)       { kw += 5;  details.push("Phone number found"); }
+          if (hasAddress)     { kw += 5;  details.push("Street address found"); }
+          if (hasLocalSchema) { kw += 10; details.push("LocalBusiness schema"); }
+          if (hasGeoMeta)     { kw += 5;  details.push("Map/geo signals"); }
+
+          results.keywords        = Math.min(kw, 100);
+          results.keywordTested   = true;
           results.cityOccurrences = occurrences;
+          results.keywordDetails  = details;
 
         } catch (e) {
           results.keywords      = null;
@@ -205,27 +313,139 @@ export default {
           results.keywordError  = e.message;
         }
       } else {
-        results.keywords      = null;
-        results.keywordTested = false;
+        results.keywords      = siteUrl ? null : null;
+        results.keywordTested = !!siteUrl;
       }
 
-      // ── 4. Citation consistency (smart estimate) ─────────
-      // Real citation data requires BrightLocal API ($).
-      // This is a logic-based estimate using what we already know.
+      // ── 5. Technical SEO ─────────────────────────────────
+      if (siteUrl) {
+        try {
+          let tech = 0;
+          const techDetails = [];
+
+          // HTTPS check (20 pts)
+          if (siteUrl.startsWith("https://")) {
+            tech += 20; techDetails.push("HTTPS ✓");
+          } else {
+            techDetails.push("No HTTPS ✗");
+          }
+
+          // Sitemap.xml check (20 pts)
+          try {
+            const origin = new URL(siteUrl).origin;
+            const smRes  = await fetch(`${origin}/sitemap.xml`, {
+              method: "HEAD",
+              headers: { "User-Agent": "SEOrceryBot/1.0" },
+              redirect: "follow",
+            });
+            if (smRes.ok) {
+              tech += 20; techDetails.push("Sitemap found");
+            } else {
+              techDetails.push("No sitemap");
+            }
+          } catch {
+            techDetails.push("No sitemap");
+          }
+
+          // robots.txt check (15 pts)
+          try {
+            const origin  = new URL(siteUrl).origin;
+            const robRes  = await fetch(`${origin}/robots.txt`, {
+              headers: { "User-Agent": "SEOrceryBot/1.0" },
+              redirect: "follow",
+            });
+            const robText = await robRes.text();
+            if (robRes.ok && robText.toLowerCase().includes("user-agent")) {
+              tech += 15; techDetails.push("robots.txt found");
+            } else {
+              techDetails.push("No robots.txt");
+            }
+          } catch {
+            techDetails.push("No robots.txt");
+          }
+
+          // Image alt tags (20 pts) — from the HTML we already fetched
+          if (siteFetchOk && siteHtml) {
+            const imgTags   = siteHtml.match(/<img\b[^>]*>/gi) || [];
+            const totalImgs = imgTags.length;
+            const withAlt   = imgTags.filter(t => /\balt\s*=\s*["'][^"']+/i.test(t)).length;
+
+            if (totalImgs === 0) {
+              tech += 15; // No images = not penalized, partial credit
+            } else {
+              const altPct = withAlt / totalImgs;
+              if (altPct >= 0.9)      tech += 20;
+              else if (altPct >= 0.5) tech += 10;
+              else                    tech += 3;
+              techDetails.push(`${withAlt}/${totalImgs} images have alt text`);
+            }
+          }
+
+          // Meta viewport / mobile-friendly tag (10 pts)
+          if (siteFetchOk && siteHtml) {
+            if (siteHtml.toLowerCase().includes('name="viewport"')) {
+              tech += 10; techDetails.push("Mobile viewport ✓");
+            } else {
+              techDetails.push("No viewport tag");
+            }
+          }
+
+          // Social media links (15 pts — up to 3 platforms x 5pts)
+          if (siteFetchOk && siteHtml) {
+            const lower = siteHtml.toLowerCase();
+            const socials = [
+              { name: "Facebook",  pattern: "facebook.com/" },
+              { name: "Instagram", pattern: "instagram.com/" },
+              { name: "LinkedIn",  pattern: "linkedin.com/" },
+              { name: "Yelp",      pattern: "yelp.com/" },
+              { name: "X/Twitter", pattern: "twitter.com/" },
+              { name: "X",         pattern: "x.com/" },
+              { name: "YouTube",   pattern: "youtube.com/" },
+            ];
+            const found = [];
+            for (const s of socials) {
+              if (lower.includes(s.pattern) && !found.includes(s.name)) {
+                found.push(s.name);
+              }
+            }
+            const socialPts = Math.min(found.length * 5, 15);
+            tech += socialPts;
+            if (found.length > 0) {
+              techDetails.push(`Social: ${found.slice(0, 3).join(", ")}`);
+            } else {
+              techDetails.push("No social links");
+            }
+          }
+
+          results.techSeo        = Math.min(tech, 100);
+          results.techSeoTested  = true;
+          results.techSeoDetails = techDetails;
+
+        } catch (e) {
+          results.techSeo       = null;
+          results.techSeoTested = false;
+          results.techSeoError  = e.message;
+        }
+      } else {
+        results.techSeo       = null;
+        results.techSeoTested = false;
+      }
+
+      // ── 6. Citation consistency (smart estimate) ─────────
       {
-        let cit = 40; // baseline
-        if (results.placesFound)          cit += 20; // exists on Google
-        if (results.gbp > 70)             cit += 15; // profile is complete
-        if (results.reviews > 50)         cit += 15; // active business signals
-        if (results.hasWebsite)           cit += 10; // website matches listing
+        let cit = 40;
+        if (results.placesFound)          cit += 20;
+        if (results.gbp > 70)             cit += 15;
+        if (results.reviews > 50)         cit += 15;
+        if (results.hasWebsite)           cit += 10;
         results.citations          = Math.min(cit, 100);
         results.citationsEstimated = true;
       }
 
       // ── Overall score ─────────────────────────────────────
-      const scoreKeys  = ["gbp","reviews","speed","keywords","citations"];
-      const available  = scoreKeys.filter(k => results[k] != null);
-      results.overall  = available.length > 0
+      const scoreKeys = ["gbp","reviews","speed","vitals","keywords","techSeo","citations"];
+      const available = scoreKeys.filter(k => results[k] != null);
+      results.overall     = available.length > 0
         ? Math.round(available.reduce((a, k) => a + results[k], 0) / available.length)
         : 0;
       results.factorCount = available.length;
