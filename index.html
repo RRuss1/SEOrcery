@@ -316,14 +316,69 @@
     }
     .powered a { color: var(--teal); text-decoration: none; }
     .powered a:hover { text-decoration: underline; }
+
+    /* ── Top nav ── */
+    .topnav {
+      background: var(--navy);
+      height: 52px;
+      display: flex;
+      align-items: center;
+      padding: 0 1.5rem;
+      gap: 1.5rem;
+      width: 100%;
+      position: fixed;
+      top: 0; left: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    }
+    body { padding-top: calc(52px + 2rem); }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+    .nav-logo-icon { font-size: 18px; line-height: 1; }
+    .nav-logo-text {
+      font-size: 16px; font-weight: 600; color: var(--white);
+      letter-spacing: -0.3px;
+    }
+    .nav-logo-text span { color: var(--teal); }
+    .nav-divider {
+      width: 1px; height: 20px;
+      background: rgba(255,255,255,0.15);
+    }
+    .nav-links { display: flex; gap: 4px; }
+    .nav-link {
+      font-size: 13px; font-weight: 500;
+      color: rgba(255,255,255,0.55);
+      text-decoration: none;
+      padding: 5px 12px;
+      border-radius: 6px;
+      transition: all 0.15s;
+    }
+    .nav-link:hover { color: var(--white); background: rgba(255,255,255,0.08); }
+    .nav-link.active { color: var(--teal); background: rgba(0,180,166,0.12); }
+    .nav-badge {
+      font-size: 10px; background: #F5A623; color: var(--navy);
+      padding: 1px 5px; border-radius: 4px; margin-left: 4px;
+      font-weight: 600; vertical-align: middle;
+    }
   </style>
 </head>
 <body>
 
-  <div class="logo-bar">
-    <div class="logo-icon">🔮</div>
-    <div class="logo-text">SEO<span>rcery</span></div>
-  </div>
+  <nav class="topnav">
+    <a class="nav-logo" href="index.html">
+      <span class="nav-logo-icon">🔮</span>
+      <span class="nav-logo-text">SEO<span>rcery</span></span>
+    </a>
+    <div class="nav-divider"></div>
+    <div class="nav-links">
+      <a class="nav-link active" href="index.html">Score Checker</a>
+      <a class="nav-link" href="leads.html">Lead Radar <span class="nav-badge">NEW</span></a>
+    </div>
+  </nav>
 
   <div class="card">
 

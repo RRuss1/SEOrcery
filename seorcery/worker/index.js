@@ -91,27 +91,43 @@ export default {
         const place      = placesData.places?.[0];
 
         if (place && place.businessStatus !== "CLOSED_PERMANENTLY") {
-          let gbp = 30;
-          if (place.rating)                       gbp += 15;
-          if (place.regularOpeningHours)          gbp += 20;
-          if (place.photos?.length >= 3)          gbp += 20;
-          if (place.websiteUri)                   gbp += 15;
+          // GBP completeness — tighter scoring, harder to max
+          const photoCount = place.photos?.length || 0;
+          let gbp = 10; // base: found on Google
+          if (place.rating)                       gbp += 8;  // has any rating
+          if (place.regularOpeningHours)          gbp += 12; // hours listed
+          if (photoCount >= 1)                    gbp += 5;  // has any photos
+          if (photoCount >= 3)                    gbp += 10; // decent photo set
+          if (photoCount >= 6)                    gbp += 8;  // rich media
+          if (place.websiteUri)                   gbp += 10; // website linked
+          if (place.rating >= 4.0)                gbp += 10; // good rating
+          if (place.rating >= 4.5)                gbp += 7;  // great rating
+          if ((place.userRatingCount || 0) >= 50) gbp += 10; // active profile
+          if ((place.userRatingCount || 0) >= 100) gbp += 10; // well-maintained
           results.gbp = Math.min(gbp, 100);
 
+          // Review health — granular tiers, hard to max without volume + quality
           const count  = place.userRatingCount || 0;
           const rating = place.rating || 0;
           let reviews  = 0;
-          if (count >= 1)  reviews += 15;
-          if (count >= 10) reviews += 20;
-          if (count >= 25) reviews += 20;
-          if (count >= 50) reviews += 20;
-          if (rating >= 4.0) reviews += 15;
-          if (rating >= 4.5) reviews += 10;
-          results.reviews     = Math.min(reviews, 100);
+          if (count >= 1)    reviews += 5;   // has any
+          if (count >= 5)    reviews += 8;   // getting started
+          if (count >= 15)   reviews += 8;   // building momentum
+          if (count >= 30)   reviews += 10;  // solid base
+          if (count >= 50)   reviews += 10;  // strong
+          if (count >= 100)  reviews += 10;  // very strong
+          if (count >= 200)  reviews += 7;   // dominant
+          if (rating >= 3.5) reviews += 8;   // decent rating
+          if (rating >= 4.0) reviews += 10;  // good rating
+          if (rating >= 4.5) reviews += 12;  // excellent rating
+          // Recency penalty: low count + high rating = probably not sustained
+          if (count < 10 && rating >= 4.5) reviews -= 5;
+          results.reviews     = Math.max(0, Math.min(reviews, 100));
           results.placesFound = true;
           results.bizName     = place.displayName?.text || bizName;
           results.rating      = rating;
           results.reviewCount = count;
+          results.photoCount  = photoCount;
           results.hasWebsite  = !!place.websiteUri;
           results.hasHours    = !!place.regularOpeningHours;
 
@@ -358,9 +374,9 @@ export default {
           if (occurrences > 8)  kw += 5;
           if (occurrences > 15) kw += 5;
 
-          if (hasPhone)       { kw += 5;  details.push("Phone number found"); }
-          if (hasAddress)     { kw += 5;  details.push("Street address found"); }
-          if (hasLocalSchema) { kw += 10; details.push("LocalBusiness schema"); }
+          if (hasPhone)       { kw += 3;  details.push("Phone number found"); }
+          if (hasAddress)     { kw += 3;  details.push("Street address found"); }
+          if (hasLocalSchema) { kw += 12; details.push("LocalBusiness schema"); }
           if (hasGeoMeta)     { kw += 5;  details.push("Map/geo signals"); }
 
           results.keywords        = Math.min(kw, 100);
@@ -378,20 +394,20 @@ export default {
         results.keywordTested = !!siteUrl;
       }
 
-      // ── 5. Technical SEO ─────────────────────────────────
+      // ── 5. Technical SEO — tighter scoring with more checks ──
       if (siteUrl) {
         try {
           let tech = 0;
           const techDetails = [];
 
-          // HTTPS check (20 pts)
+          // HTTPS (10 pts)
           if (siteUrl.startsWith("https://")) {
-            tech += 20; techDetails.push("HTTPS ✓");
+            tech += 10; techDetails.push("HTTPS ✓");
           } else {
             techDetails.push("No HTTPS ✗");
           }
 
-          // Sitemap.xml check (20 pts)
+          // Sitemap.xml (10 pts)
           try {
             const origin = new URL(siteUrl).origin;
             const smRes  = await fetch(`${origin}/sitemap.xml`, {
@@ -400,7 +416,7 @@ export default {
               redirect: "follow",
             });
             if (smRes.ok) {
-              tech += 20; techDetails.push("Sitemap found");
+              tech += 10; techDetails.push("Sitemap found");
             } else {
               techDetails.push("No sitemap");
             }
@@ -408,7 +424,7 @@ export default {
             techDetails.push("No sitemap");
           }
 
-          // robots.txt check (15 pts)
+          // robots.txt (8 pts)
           try {
             const origin  = new URL(siteUrl).origin;
             const robRes  = await fetch(`${origin}/robots.txt`, {
@@ -417,7 +433,7 @@ export default {
             });
             const robText = await robRes.text();
             if (robRes.ok && robText.toLowerCase().includes("user-agent")) {
-              tech += 15; techDetails.push("robots.txt found");
+              tech += 8; techDetails.push("robots.txt found");
             } else {
               techDetails.push("No robots.txt");
             }
@@ -425,35 +441,69 @@ export default {
             techDetails.push("No robots.txt");
           }
 
-          // Image alt tags (20 pts) — from the HTML we already fetched
           if (siteFetchOk && siteHtml) {
+            const lower = siteHtml.toLowerCase();
+
+            // Image alt tags (12 pts)
             const imgTags   = siteHtml.match(/<img\b[^>]*>/gi) || [];
             const totalImgs = imgTags.length;
             const withAlt   = imgTags.filter(t => /\balt\s*=\s*["'][^"']+/i.test(t)).length;
-
             if (totalImgs === 0) {
-              tech += 15; // No images = not penalized, partial credit
+              tech += 6;
             } else {
               const altPct = withAlt / totalImgs;
-              if (altPct >= 0.9)      tech += 20;
-              else if (altPct >= 0.5) tech += 10;
-              else                    tech += 3;
+              if (altPct >= 0.9)      tech += 12;
+              else if (altPct >= 0.5) tech += 6;
+              else                    tech += 2;
               techDetails.push(`${withAlt}/${totalImgs} images have alt text`);
             }
-          }
 
-          // Meta viewport / mobile-friendly tag (10 pts)
-          if (siteFetchOk && siteHtml) {
-            if (siteHtml.toLowerCase().includes('name="viewport"')) {
-              tech += 10; techDetails.push("Mobile viewport ✓");
+            // Meta viewport (8 pts)
+            if (lower.includes('name="viewport"')) {
+              tech += 8; techDetails.push("Mobile viewport ✓");
             } else {
               techDetails.push("No viewport tag");
             }
-          }
 
-          // Social media links (15 pts — up to 3 platforms x 5pts)
-          if (siteFetchOk && siteHtml) {
-            const lower = siteHtml.toLowerCase();
+            // Meta description present (8 pts)
+            const hasMetaDesc = /<meta[^>]+name=["']description["'][^>]+content=["'][^"']+/i.test(siteHtml)
+                             || /<meta[^>]+content=["'][^"']+["'][^>]+name=["']description["']/i.test(siteHtml);
+            if (hasMetaDesc) {
+              tech += 8; techDetails.push("Meta description ✓");
+            } else {
+              techDetails.push("No meta description");
+            }
+
+            // Canonical tag (8 pts)
+            if (lower.includes('rel="canonical"') || lower.includes("rel='canonical'")) {
+              tech += 8; techDetails.push("Canonical tag ✓");
+            } else {
+              techDetails.push("No canonical tag");
+            }
+
+            // Lang attribute (5 pts)
+            if (/<html[^>]+lang=/i.test(siteHtml)) {
+              tech += 5; techDetails.push("Lang attribute ✓");
+            } else {
+              techDetails.push("No lang attribute");
+            }
+
+            // Open Graph tags (8 pts)
+            const hasOG = lower.includes('property="og:') || lower.includes("property='og:");
+            if (hasOG) {
+              tech += 8; techDetails.push("Open Graph tags ✓");
+            } else {
+              techDetails.push("No Open Graph tags");
+            }
+
+            // Heading structure — has H1 (5 pts)
+            if (/<h1[\s>]/i.test(siteHtml)) {
+              tech += 5; techDetails.push("Has H1 tag");
+            } else {
+              techDetails.push("Missing H1 tag");
+            }
+
+            // Social media links (up to 8 pts — 3pts each, max 8)
             const socials = [
               { name: "Facebook",  pattern: "facebook.com/" },
               { name: "Instagram", pattern: "instagram.com/" },
@@ -469,7 +519,7 @@ export default {
                 found.push(s.name);
               }
             }
-            const socialPts = Math.min(found.length * 5, 15);
+            const socialPts = Math.min(found.length * 3, 8);
             tech += socialPts;
             if (found.length > 0) {
               techDetails.push(`Social: ${found.slice(0, 3).join(", ")}`);
@@ -493,12 +543,19 @@ export default {
       }
 
       // ── 6. Citation consistency (smart estimate) ─────────
+      // Much tighter — most businesses should land 30-55
       {
-        let cit = 40;
-        if (results.placesFound)          cit += 20;
-        if (results.gbp > 70)             cit += 15;
-        if (results.reviews > 50)         cit += 15;
-        if (results.hasWebsite)           cit += 10;
+        let cit = 15; // baseline (was 40 — way too generous)
+        if (results.placesFound)           cit += 12; // exists on Google
+        if (results.hasWebsite)            cit += 10; // website matches listing
+        if (results.hasHours)              cit += 8;  // hours = consistent data
+        if (results.gbp > 50)              cit += 8;  // decent profile
+        if (results.gbp > 75)              cit += 10; // strong profile
+        if (results.reviews > 30)          cit += 8;  // some review activity
+        if (results.reviews > 60)          cit += 10; // strong review signals
+        if (results.reviewCount >= 50)     cit += 8;  // volume = visibility
+        if ((results.photoCount || 0) >= 3) cit += 6; // photos = active listing
+        if (results.rating >= 4.0)         cit += 5;  // quality signal
         results.citations          = Math.min(cit, 100);
         results.citationsEstimated = true;
       }
@@ -514,6 +571,90 @@ export default {
       return new Response(JSON.stringify(results), {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
+    }
+
+    // ── Radar action — bulk lead finder ────────────────────────
+    if (action === "radar") {
+      const industry = (url.searchParams.get("industry") || "").trim();
+      const city     = (url.searchParams.get("city")     || "").trim();
+      const limit    = Math.min(parseInt(url.searchParams.get("limit") || "20"), 20);
+
+      if (!industry || !city) {
+        return new Response(
+          JSON.stringify({ error: "industry and city are required" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      try {
+        // Use Places API (New) Text Search to find businesses
+        const fieldMask = [
+          "places.displayName",
+          "places.formattedAddress",
+          "places.location",
+          "places.rating",
+          "places.userRatingCount",
+          "places.regularOpeningHours",
+          "places.photos",
+          "places.websiteUri",
+          "places.businessStatus",
+          "places.id",
+        ].join(",");
+
+        const placesRes = await fetch(
+          "https://places.googleapis.com/v1/places:searchText",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Goog-Api-Key": apiKey,
+              "X-Goog-FieldMask": fieldMask,
+            },
+            body: JSON.stringify({
+              textQuery: `${industry} in ${city}`,
+              maxResultCount: limit,
+            }),
+          }
+        );
+        const placesData = await placesRes.json();
+        const rawPlaces  = (placesData.places || []).filter(
+          p => p.businessStatus !== "CLOSED_PERMANENTLY"
+        );
+
+        // Map to a simplified format the frontend expects
+        const places = rawPlaces.map(p => ({
+          name:               p.displayName?.text || "",
+          formatted_address:  p.formattedAddress || "",
+          lat:                p.location?.latitude,
+          lng:                p.location?.longitude,
+          rating:             p.rating || 0,
+          user_ratings_total: p.userRatingCount || 0,
+          opening_hours:      !!p.regularOpeningHours,
+          photos:             p.photos || [],
+          website:            p.websiteUri || null,
+          place_id:           p.id || null,
+        }));
+
+        // Compute center from average of all place coordinates
+        const withCoords = places.filter(p => p.lat && p.lng);
+        const center = withCoords.length > 0
+          ? {
+              lat: withCoords.reduce((a, p) => a + p.lat, 0) / withCoords.length,
+              lng: withCoords.reduce((a, p) => a + p.lng, 0) / withCoords.length,
+            }
+          : { lat: 0, lng: 0 };
+
+        return new Response(
+          JSON.stringify({ places, center, total: places.length }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+
+      } catch (e) {
+        return new Response(
+          JSON.stringify({ error: e.message }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     // ── Unknown action ───────────────────────────────────────
