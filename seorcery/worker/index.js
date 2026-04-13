@@ -577,7 +577,7 @@ export default {
     if (action === "radar") {
       const industry = (url.searchParams.get("industry") || "").trim();
       const city     = (url.searchParams.get("city")     || "").trim();
-      const limit    = Math.min(parseInt(url.searchParams.get("limit") || "20"), 20);
+      const limit    = Math.min(parseInt(url.searchParams.get("limit") || "20"), 60);
 
       if (!industry || !city) {
         return new Response(
@@ -587,7 +587,6 @@ export default {
       }
 
       try {
-        // Use Places API (New) Text Search to find businesses
         const fieldMask = [
           "places.displayName",
           "places.formattedAddress",
@@ -601,25 +600,38 @@ export default {
           "places.id",
         ].join(",");
 
-        const placesRes = await fetch(
-          "https://places.googleapis.com/v1/places:searchText",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Goog-Api-Key": apiKey,
-              "X-Goog-FieldMask": fieldMask,
-            },
-            body: JSON.stringify({
-              textQuery: `${industry} in ${city}`,
-              maxResultCount: limit,
-            }),
-          }
-        );
-        const placesData = await placesRes.json();
-        const rawPlaces  = (placesData.places || []).filter(
-          p => p.businessStatus !== "CLOSED_PERMANENTLY"
-        );
+        const allRaw   = [];
+        let pageToken  = null;
+        const perPage  = Math.min(limit, 20); // API max per request is 20
+        const maxPages = Math.ceil(limit / 20);
+        let pages      = 0;
+
+        do {
+          const reqBody = { textQuery: `${industry} in ${city}`, maxResultCount: perPage };
+          if (pageToken) reqBody.pageToken = pageToken;
+
+          const placesRes = await fetch(
+            "https://places.googleapis.com/v1/places:searchText",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-Goog-Api-Key": apiKey,
+                "X-Goog-FieldMask": fieldMask + ",nextPageToken",
+              },
+              body: JSON.stringify(reqBody),
+            }
+          );
+          const placesData = await placesRes.json();
+          const batch = (placesData.places || []).filter(
+            p => p.businessStatus !== "CLOSED_PERMANENTLY"
+          );
+          allRaw.push(...batch);
+          pageToken = placesData.nextPageToken || null;
+          pages++;
+        } while (pageToken && allRaw.length < limit && pages < maxPages);
+
+        const rawPlaces = allRaw.slice(0, limit);
 
         // Map to a simplified format the frontend expects
         const places = rawPlaces.map(p => ({

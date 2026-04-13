@@ -92,4 +92,4 @@ Once deployed, the widget can be embedded on any website with a single iframe:
 
 ## Built By
 
-Rich Russ · SEOrcery · Powered by [Visual Link Solutions](https://vlsmarketing.net)
+Rich Russ · SEOrcery · Powered by [Russell SPC](https://russellspc.com)
