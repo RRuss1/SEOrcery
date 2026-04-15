@@ -108,9 +108,15 @@ body{font-family:var(--font);background:var(--linen);min-height:100vh;display:fl
 .score-hero{background:var(--navy);border-color:var(--navy);color:var(--white);text-align:center;padding:3rem 2.5rem}
 .score-hero .section-badge{background:rgba(0,196,217,0.15);color:var(--cyan)}
 .score-hero .section-title{color:var(--white)}
-.score-big{display:flex;align-items:baseline;justify-content:center;gap:0.25rem;margin:1.5rem 0 0.5rem}
-.score-num{font-size:5rem;font-weight:800;color:var(--white);line-height:1}
-.score-max{font-size:1.5rem;font-weight:400;color:rgba(255,255,255,0.4)}
+.score-hero-row{display:flex;align-items:center;justify-content:center;gap:2rem;margin:1.5rem 0 1rem;flex-wrap:wrap}
+.score-grade-big{font-size:5rem;font-weight:800;line-height:1}
+.score-meta{text-align:left}
+.score-num{font-size:2.5rem;font-weight:800;color:var(--white);line-height:1}
+.score-max{font-size:1rem;font-weight:400;color:rgba(255,255,255,0.4)}
+.score-engines-mini{display:flex;gap:0.5rem;margin-top:0.6rem}
+.engine-mini{padding:0.2rem 0.6rem;border-radius:4px;font-size:0.65rem;font-weight:700}
+.engine-mini-yes{background:rgba(22,163,74,0.2);color:#4ADE80}
+.engine-mini-no{background:rgba(220,38,38,0.2);color:#FCA5A5}
 .grade-badge{display:inline-block;padding:0.4rem 1.5rem;border-radius:20px;font-size:1rem;font-weight:800;margin-bottom:1rem}
 .grade-a{background:var(--green-bg);color:var(--green)}
 .grade-b{background:var(--blue-bg);color:var(--blue)}
@@ -129,13 +135,19 @@ body{font-family:var(--font);background:var(--linen);min-height:100vh;display:fl
 
 /* ENGINE CARDS */
 .engine-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
-.engine-card{background:var(--linen);border:1px solid var(--border);border-radius:8px;padding:1.25rem;text-align:center}
+.engine-card{background:var(--linen);border:1px solid var(--border);border-radius:8px;padding:1.25rem;text-align:center;transition:border-color 0.2s}
+.engine-card:hover{border-color:var(--cyan)}
+.engine-card.engine-found{border-left:3px solid var(--green)}
+.engine-card.engine-missing{border-left:3px solid var(--red)}
 .engine-name{font-weight:700;font-size:0.88rem;color:var(--navy);margin-bottom:0.5rem}
+.engine-verdict{font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:0.25rem}
+.engine-verdict-yes{color:var(--green)}
+.engine-verdict-no{color:var(--red)}
 .engine-status{font-size:0.72rem;font-weight:600;padding:0.15rem 0.5rem;border-radius:20px;display:inline-block;margin-bottom:0.5rem}
 .engine-mentioned{background:var(--green-bg);color:var(--green)}
 .engine-not-mentioned{background:var(--red-bg);color:var(--red)}
 .engine-detail{font-size:0.72rem;color:var(--muted);margin-bottom:0.5rem}
-.engine-excerpt{font-size:0.75rem;color:var(--gun-light);line-height:1.6;font-style:italic;border-top:1px solid var(--border);padding-top:0.5rem;text-align:left}
+.engine-excerpt{font-size:0.75rem;color:var(--gun-light);line-height:1.6;font-style:italic;padding:0.6rem;background:var(--white);border-left:3px solid var(--cyan);border-radius:0 6px 6px 0;text-align:left;margin-top:0.5rem}
 
 /* FIXES LIST */
 .fix-list{display:flex;flex-direction:column;gap:0.6rem}
@@ -267,7 +279,13 @@ body{font-family:var(--font);background:var(--linen);min-height:100vh;display:fl
     <div class="card result-section score-hero" id="sec-score">
       <div class="section-badge badge-audit">AEO Audit Complete</div>
       <h3 class="section-title" id="score-brand"></h3>
-      <div class="score-big"><span class="score-num" id="score-num">--</span><span class="score-max">/100</span></div>
+      <div class="score-hero-row">
+        <div class="score-grade-big" id="grade-letter">--</div>
+        <div class="score-meta">
+          <div><span class="score-num" id="score-num">--</span><span class="score-max">/100</span></div>
+          <div class="score-engines-mini" id="engines-mini"></div>
+        </div>
+      </div>
       <div class="grade-badge" id="grade-badge">--</div>
       <p class="score-summary" id="score-summary"></p>
     </div>
@@ -358,13 +376,29 @@ function sentimentColor(s){if(s==='positive')return'var(--green)';if(s==='negati
 function trendClass(t){return'trend-'+t}
 
 // Renderers
+function gradeColor(g){
+  var gc=g.toUpperCase();
+  if(gc==='A')return'#16A34A';if(gc==='B')return'#2563EB';if(gc==='C')return'#CA8A04';return'#DC2626';
+}
 function renderScore(r,brand){
   document.getElementById('score-brand').textContent='AEO Audit: '+brand;
   document.getElementById('score-num').textContent=r.composite_score;
+  var gl=document.getElementById('grade-letter');
+  gl.textContent=r.grade;
+  gl.style.color=gradeColor(r.grade);
   var gb=document.getElementById('grade-badge');
   gb.textContent='Grade '+r.grade;
   gb.className='grade-badge '+gradeClass(r.grade);
   document.getElementById('score-summary').textContent=r.summary;
+  // Mini engine pills in score hero
+  if(r.engine_results){
+    var engines=[{key:'chatgpt',label:'ChatGPT'},{key:'perplexity',label:'Perplexity'},{key:'gemini',label:'Gemini'}];
+    document.getElementById('engines-mini').innerHTML=engines.map(function(e){
+      var d=r.engine_results[e.key];
+      var yes=d&&d.mentioned;
+      return '<span class="engine-mini '+(yes?'engine-mini-yes':'engine-mini-no')+'">'+(yes?'&#10003;':'&#10007;')+' '+e.label+'</span>';
+    }).join('');
+  }
 }
 
 function renderDimensions(d){
@@ -390,9 +424,11 @@ function renderEngines(er){
   document.getElementById('engine-grid').innerHTML=engines.map(function(e){
     var d=er[e.key];if(!d)return'';
     var mentioned=d.mentioned;
-    return '<div class="engine-card"><div class="engine-name">'+e.name+'</div>'
-      +'<div class="engine-status '+(mentioned?'engine-mentioned':'engine-not-mentioned')+'">'+(mentioned?'Mentioned':'Not Mentioned')+'</div>'
-      +(mentioned?'<div class="engine-detail">Position: #'+(d.position||'?')+' &middot; Sentiment: <span style="color:'+sentimentColor(d.sentiment)+';font-weight:600">'+(d.sentiment||'n/a')+'</span></div>':'')
+    return '<div class="engine-card '+(mentioned?'engine-found':'engine-missing')+'">'
+      +'<div class="engine-name">'+e.name+'</div>'
+      +'<div class="engine-verdict '+(mentioned?'engine-verdict-yes':'engine-verdict-no')+'">'+(mentioned?'&#10003;':'&#10007;')+'</div>'
+      +'<div class="engine-status '+(mentioned?'engine-mentioned':'engine-not-mentioned')+'">'+(mentioned?'Cited':'Not Found')+'</div>'
+      +(mentioned?'<div class="engine-detail">Position #'+(d.position||'?')+' &middot; <span style="color:'+sentimentColor(d.sentiment)+';font-weight:600">'+(d.sentiment||'n/a')+'</span></div>':'<div class="engine-detail">Not mentioned in responses</div>')
       +(d.excerpt?'<div class="engine-excerpt">"'+esc(d.excerpt)+'"</div>':'')
       +'</div>';
   }).join('');

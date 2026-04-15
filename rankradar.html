@@ -469,28 +469,43 @@ body {
 .pos-contender { background: var(--yellow-bg); color: var(--yellow); }
 .pos-undiscovered { background: var(--red-bg); color: var(--red); }
 
-.standings-bars { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 2rem; }
+.standings-bars { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 2rem; }
 .standing-row {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.6rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: var(--linen);
+  border: 1px solid var(--border-navy);
+  transition: border-color 0.2s;
 }
+.standing-row:hover { border-color: var(--cyan); }
+.standing-row.is-client { background: rgba(0,196,217,0.06); border-color: rgba(0,196,217,0.3); }
+.standing-rank { font-size: 0.68rem; font-weight: 700; color: var(--muted); min-width: 22px; }
+.standing-favicon {
+  width: 24px; height: 24px; border-radius: 6px; background: var(--navy);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.58rem; font-weight: 800; color: var(--white); flex-shrink: 0;
+}
+.standing-row.is-client .standing-favicon { background: var(--cyan); color: var(--navy); }
 .standing-name {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--navy);
-  min-width: 140px;
-  text-align: right;
-}
-.standing-name.is-client { color: var(--cyan); }
-.standing-bar-track {
   flex: 1;
-  height: 24px;
-  background: var(--linen);
-  border-radius: 4px;
-  overflow: hidden;
-  position: relative;
 }
+.standing-row.is-client .standing-name { color: var(--cyan); }
+.standing-score-pill {
+  font-size: 0.68rem; font-weight: 700; padding: 0.15rem 0.55rem; border-radius: 12px;
+}
+.pill-leader { background: var(--green-bg); color: var(--green); }
+.pill-challenger { background: var(--blue-bg); color: var(--blue); }
+.pill-contender { background: var(--yellow-bg); color: var(--yellow); }
+.pill-undiscovered { background: var(--red-bg); color: var(--red); }
+.standing-pos { font-size: 0.62rem; color: var(--muted); white-space: nowrap; }
+/* legacy compat */
+.standing-bar-track { display: none; }
 .standing-bar-fill {
   height: 100%;
   border-radius: 4px;
@@ -928,6 +943,18 @@ function renderChannels(channelScores, businessName) {
   tbody.innerHTML = html;
 }
 
+function getInitials(name) {
+  return name.split(/\s+/).map(function(w){return w[0]}).join('').toUpperCase().slice(0,2);
+}
+function pillClass(pos) {
+  var p = (pos||'').toLowerCase();
+  if (p === 'leader') return 'pill-leader';
+  if (p === 'challenger') return 'pill-challenger';
+  if (p === 'contender') return 'pill-contender';
+  return 'pill-undiscovered';
+}
+var FAVICON_COLORS = ['#1E40AF','#7C3AED','#EA580C','#16A34A','#DC2626','#6B7280'];
+
 function renderRanking(ranking, businessName) {
   document.getElementById('rank-score').textContent = ranking.clientScore;
   const badge = document.getElementById('rank-badge');
@@ -936,27 +963,20 @@ function renderRanking(ranking, businessName) {
 
   const barsEl = document.getElementById('standings-bars');
   const sorted = [...ranking.standings].sort((a, b) => b.score - a.score);
-  const maxScore = sorted[0]?.score || 100;
 
-  barsEl.innerHTML = sorted.map(s => {
-    const isClient = s.name.toLowerCase() === businessName.toLowerCase();
-    return `<div class="standing-row">
-      <div class="standing-name ${isClient ? 'is-client' : ''}">${esc(s.name)}</div>
-      <div class="standing-bar-track">
-        <div class="standing-bar-fill ${isClient ? 'is-client' : ''}" style="width:0" data-width="${(s.score / maxScore * 100).toFixed(1)}%"></div>
-      </div>
-      <div class="standing-score">${s.score}</div>
-    </div>`;
+  barsEl.innerHTML = sorted.map(function(s, i) {
+    var isClient = s.name.toLowerCase() === businessName.toLowerCase();
+    var initials = getInitials(s.name);
+    var bgColor = isClient ? 'var(--cyan)' : FAVICON_COLORS[i % FAVICON_COLORS.length];
+    var pos = s.position || (s.score >= 80 ? 'Leader' : s.score >= 60 ? 'Challenger' : s.score >= 40 ? 'Contender' : 'Undiscovered');
+    return '<div class="standing-row' + (isClient ? ' is-client' : '') + '">'
+      + '<span class="standing-rank">#' + (i+1) + '</span>'
+      + '<span class="standing-favicon" style="background:' + bgColor + '">' + initials + '</span>'
+      + '<span class="standing-name">' + esc(s.name) + '</span>'
+      + '<span class="standing-score-pill ' + pillClass(pos) + '">' + s.score + '</span>'
+      + '<span class="standing-pos">' + pos + '</span>'
+      + '</div>';
   }).join('');
-
-  // Animate bars
-  requestAnimationFrame(() => {
-    setTimeout(() => {
-      barsEl.querySelectorAll('.standing-bar-fill').forEach(bar => {
-        bar.style.width = bar.dataset.width;
-      });
-    }, 100);
-  });
 
   // Gaps
   const gapsEl = document.getElementById('gaps-grid');
