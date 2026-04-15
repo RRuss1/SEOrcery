@@ -1,414 +1,500 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SEOrcery — Free Local SEO Score</title>
-  <meta name="description" content="Get a free instant local SEO score for your business. Real data from Google, PageSpeed, and keyword analysis." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono&display=swap" rel="stylesheet" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEOrcery Score Checker — Russell SPC</title>
+<meta name="description" content="Try SEOrcery — a free local SEO score checker built by Russell SPC. Real data from Google, PageSpeed, and keyword analysis.">
+<link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --linen: #FAF7F0;
+  --navy: #0B1F3A;
+  --navy-mid: #0F2A4E;
+  --gun: #1E1E1E;
+  --gun-light: #444444;
+  --cyan: #00C4D9;
+  --cyan-dim: rgba(0,196,217,0.15);
+  --white: #ffffff;
+  --border: #E5E7EB;
+  --border-navy: rgba(11,31,58,0.12);
+  --muted: #6B7280;
+  --text: #1E1E1E;
+  --font: 'Inter', sans-serif;
+}
 
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    :root {
-      --navy:   #0D1B2A;
-      --teal:   #00B4A6;
-      --gold:   #F5A623;
-      --coral:  #FF6B35;
-      --purple: #7C3AED;
-      --white:  #FFFFFF;
-      --offwhite: #F7F8FA;
-      --border: #E5E7EB;
-      --muted:  #6B7280;
-      --text:   #111827;
-    }
+html { scroll-behavior: smooth; font-size: 17px; }
 
-    body {
-      font-family: "DM Sans", system-ui, sans-serif;
-      background: var(--offwhite);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 2rem 1rem;
-      color: var(--text);
-    }
+body {
+  font-family: var(--font);
+  background: var(--linen);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--text);
+}
 
-    /* ── Logo bar ── */
-    .logo-bar {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 1.5rem;
-    }
-    .logo-icon {
-      width: 40px; height: 40px;
-      background: var(--navy);
-      border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px;
-    }
-    .logo-text { font-size: 22px; font-weight: 600; color: var(--navy); letter-spacing: -0.5px; }
-    .logo-text span { color: var(--teal); }
+/* ── Top Nav ── */
+.demo-nav {
+  width: 100%;
+  background: var(--navy);
+  padding: 0.9rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+}
+.demo-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+.demo-nav-logo {
+  font-family: var(--font);
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--white);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+}
+.demo-nav-logo span { color: var(--cyan); }
+.demo-nav-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(255,255,255,0.15);
+}
+.nav-links { display: flex; gap: 4px; }
+.nav-link {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.55);
+  text-decoration: none;
+  padding: 5px 12px;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+.nav-link:hover { color: var(--white); background: rgba(255,255,255,0.08); }
+.nav-link.active { color: var(--cyan); background: rgba(0,196,217,0.12); }
+.nav-badge {
+  font-size: 0.6rem;
+  background: #F5A623;
+  color: var(--navy);
+  padding: 1px 5px;
+  border-radius: 4px;
+  margin-left: 4px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+.demo-nav-back {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--cyan);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: opacity 0.2s;
+}
+.demo-nav-back:hover { opacity: 0.8; }
 
-    /* ── Card ── */
-    .card {
-      background: var(--white);
-      border-radius: 16px;
-      box-shadow: 0 2px 20px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.06);
-      max-width: 520px;
-      width: 100%;
-      overflow: hidden;
-    }
+/* ── Page Layout ── */
+.demo-container {
+  width: 100%;
+  max-width: 560px;
+  padding: 2.5rem 1rem 3rem;
+}
 
-    /* ── Card header ── */
-    .card-header {
-      background: var(--navy);
-      padding: 1.5rem 1.75rem;
-      position: relative;
-      overflow: hidden;
-    }
-    .card-header::after {
-      content: "";
-      position: absolute;
-      right: -30px; top: -40px;
-      width: 140px; height: 140px;
-      border-radius: 50%;
-      background: rgba(0,180,166,0.12);
-      pointer-events: none;
-    }
-    .card-header h1 {
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--white);
-      position: relative;
-    }
-    .card-header p {
-      font-size: 13px;
-      color: #9FE1CB;
-      margin-top: 4px;
-      position: relative;
-    }
+/* ── Card ── */
+.card {
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 2px 24px rgba(11,31,58,0.08), 0 1px 4px rgba(11,31,58,0.04);
+  overflow: hidden;
+}
+.card-header {
+  background: var(--navy);
+  padding: 1.5rem 1.75rem;
+  position: relative;
+  overflow: hidden;
+}
+.card-header::after {
+  content: '';
+  position: absolute;
+  right: -30px; top: -40px;
+  width: 140px; height: 140px;
+  border-radius: 50%;
+  background: rgba(0,196,217,0.1);
+  pointer-events: none;
+}
+.card-header h1 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--white);
+  position: relative;
+}
+.card-header p {
+  font-size: 0.76rem;
+  color: rgba(0,196,217,0.7);
+  margin-top: 4px;
+  position: relative;
+}
 
-    /* ── Form ── */
-    .card-body { padding: 1.5rem 1.75rem; }
+/* ── Form ── */
+.card-body { padding: 1.5rem 1.75rem; }
+.field { margin-bottom: 1rem; }
+.field label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.field label .opt {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: #9CA3AF;
+}
+.field input {
+  width: 100%;
+  height: 44px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  padding: 0 14px;
+  font-size: 0.88rem;
+  font-family: var(--font);
+  color: var(--text);
+  background: var(--white);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.field input:focus {
+  outline: none;
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 3px rgba(0,196,217,0.12);
+}
+.field input::placeholder { color: #C4C9D4; }
+.field .hint {
+  font-size: 0.65rem;
+  color: #9CA3AF;
+  margin-top: 4px;
+}
 
-    .field { margin-bottom: 1rem; }
-    .field label {
-      display: block;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--muted);
-      margin-bottom: 5px;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-    }
-    .field label .opt {
-      font-weight: 400;
-      text-transform: none;
-      letter-spacing: 0;
-      color: #9CA3AF;
-    }
-    .field input {
-      width: 100%;
-      height: 42px;
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
-      padding: 0 12px;
-      font-size: 14px;
-      font-family: inherit;
-      color: var(--text);
-      background: var(--white);
-      transition: border-color 0.15s;
-    }
-    .field input:focus {
-      outline: none;
-      border-color: var(--teal);
-    }
-    .field input::placeholder { color: #C4C9D4; }
-    .field .hint {
-      font-size: 11px;
-      color: #9CA3AF;
-      margin-top: 4px;
-    }
+/* ── Submit button ── */
+.btn-analyze {
+  width: 100%;
+  height: 48px;
+  background: var(--navy);
+  color: var(--white);
+  border: none;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  font-family: var(--font);
+  cursor: pointer;
+  margin-top: 0.5rem;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.2s, transform 0.1s;
+}
+.btn-analyze:hover:not(:disabled) { background: var(--navy-mid); }
+.btn-analyze:active:not(:disabled) { transform: scale(0.99); }
+.btn-analyze:disabled { background: #9CA3AF; cursor: not-allowed; }
 
-    /* ── Submit button ── */
-    .btn-analyze {
-      width: 100%;
-      height: 46px;
-      background: var(--navy);
-      color: var(--white);
-      border: none;
-      border-radius: 8px;
-      font-size: 15px;
-      font-weight: 600;
-      font-family: inherit;
-      cursor: pointer;
-      margin-top: 0.5rem;
-      letter-spacing: 0.2px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: background 0.15s, transform 0.1s;
-    }
-    .btn-analyze:hover:not(:disabled) { background: #1a2e45; }
-    .btn-analyze:active:not(:disabled) { transform: scale(0.99); }
-    .btn-analyze:disabled { background: #9CA3AF; cursor: not-allowed; }
+/* ── Spinner ── */
+.spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.65s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Spinner ── */
-    .spinner {
-      width: 16px; height: 16px;
-      border: 2px solid rgba(255,255,255,0.35);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.65s linear infinite;
-      flex-shrink: 0;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+/* ── Results panel ── */
+.results-panel {
+  display: none;
+  border-top: 1px solid var(--border);
+  padding: 1.5rem 1.75rem;
+}
 
-    /* ── Results panel ── */
-    .results-panel {
-      display: none;
-      border-top: 1px solid var(--border);
-      padding: 1.5rem 1.75rem;
-    }
+/* Overall score — donut + chips */
+.score-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.score-donut { position: relative; width: 110px; height: 110px; flex-shrink: 0; }
+.score-donut svg { transform: rotate(-90deg); }
+.donut-bg { fill: none; stroke: #F3F4F6; stroke-width: 8; }
+.donut-ring { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 1.5s cubic-bezier(0.4,0,0.2,1); }
+.donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.score-big { font-size: 2rem; font-weight: 800; color: var(--navy); line-height: 1; }
+.score-denom { font-size: 0.7rem; color: var(--muted); }
+.score-right { flex: 1; }
+.score-label { font-size: 0.7rem; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+.grade-pill {
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 6px 16px;
+  border-radius: 20px;
+  display: inline-block;
+  margin-bottom: 0.75rem;
+}
 
-    /* Overall score row */
-    .score-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 1.5rem;
-    }
-    .score-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
-    .score-big   { font-size: 48px; font-weight: 600; color: var(--navy); line-height: 1; }
-    .score-denom { font-size: 18px; color: var(--muted); font-weight: 400; }
-    .grade-pill  {
-      font-size: 13px;
-      font-weight: 600;
-      padding: 6px 16px;
-      border-radius: 20px;
-    }
+/* Biz found badge */
+.biz-found {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  background: #EFF6FF;
+  color: #1D4ED8;
+  padding: 4px 10px;
+  border-radius: 20px;
+  margin-bottom: 1.25rem;
+  font-weight: 500;
+}
+.biz-found .dot {
+  width: 6px; height: 6px;
+  background: #22C55E;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
 
-    /* Biz found badge */
-    .biz-found {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 12px;
-      background: #EFF6FF;
-      color: #1D4ED8;
-      padding: 4px 10px;
-      border-radius: 20px;
-      margin-bottom: 1.25rem;
-      font-weight: 500;
-    }
-    .biz-found .dot {
-      width: 6px; height: 6px;
-      background: #22C55E;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
+/* Factor chips */
+.factors { margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: 0.4rem; }
+.factor-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.75rem;
+  background: #F9FAFB;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: border-color 0.2s;
+}
+.factor-chip:hover { border-color: var(--cyan); }
+.factor-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.factor-name { font-size: 0.78rem; color: var(--text); flex: 1; }
+.factor-val { font-size: 0.82rem; font-weight: 800; font-variant-numeric: tabular-nums; min-width: 36px; text-align: right; }
+.factor-val-good { color: #16A34A; }
+.factor-val-mid { color: #CA8A04; }
+.factor-val-low { color: #DC2626; }
+.factor-extra { font-size: 0.62rem; color: var(--muted); white-space: nowrap; max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
 
-    /* Factor bars */
-    .factors { margin-bottom: 1.25rem; }
-    .factor-row { margin-bottom: 12px; }
-    .factor-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 5px;
-    }
-    .factor-name { font-size: 13px; color: var(--text); }
-    .factor-val  { font-size: 13px; font-weight: 600; color: var(--navy); font-family: "DM Mono", monospace; }
-    .factor-extra { font-size: 11px; color: var(--muted); margin-top: 1px; }
-    .bar-track {
-      height: 8px;
-      background: var(--offwhite);
-      border-radius: 4px;
-      overflow: hidden;
-      border: 1px solid var(--border);
-    }
-    .bar-fill {
-      height: 100%;
-      border-radius: 4px;
-      width: 0;
-      transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+/* Tags */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 1.25rem;
+}
+.tag {
+  font-size: 0.65rem;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+.tag-warn  { background: #FEF9C3; color: #854D0E; }
+.tag-ok    { background: #DCFCE7; color: #166534; }
+.tag-alert { background: #FEE2E2; color: #991B1B; }
+.tag-info  { background: #DBEAFE; color: #1E40AF; }
 
-    /* Tags */
-    .tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 1.25rem;
-    }
-    .tag {
-      font-size: 11px;
-      font-weight: 500;
-      padding: 4px 10px;
-      border-radius: 12px;
-    }
-    .tag-warn   { background: #FEF9C3; color: #854D0E; }
-    .tag-ok     { background: #DCFCE7; color: #166534; }
-    .tag-alert  { background: #FEE2E2; color: #991B1B; }
-    .tag-info   { background: #DBEAFE; color: #1E40AF; }
+/* CTA box */
+.cta-box {
+  background: var(--linen);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+}
+.cta-headline {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 6px;
+}
+.cta-body {
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+.cta-extras {
+  font-size: 0.65rem;
+  color: var(--muted);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+.btn-cta {
+  width: 100%;
+  height: 42px;
+  background: var(--cyan);
+  color: var(--navy);
+  border: none;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.btn-cta:hover {
+  box-shadow: 0 0 24px rgba(0,196,217,0.35);
+}
 
-    /* CTA box */
-    .cta-box {
-      background: var(--offwhite);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1rem 1.25rem;
-    }
-    .cta-headline {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--navy);
-      margin-bottom: 6px;
-    }
-    .cta-body {
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.6;
-      margin-bottom: 12px;
-    }
-    .cta-extras {
-      font-size: 11px;
-      color: var(--muted);
-      margin-bottom: 12px;
-      line-height: 1.5;
-    }
-    .btn-cta {
-      width: 100%;
-      height: 42px;
-      background: var(--teal);
-      color: var(--white);
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      font-family: inherit;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-    .btn-cta:hover { background: #009e91; }
+/* Gated content overlay */
+.gated-wrap {
+  position: relative;
+}
+.gated-wrap .gated-content {
+  filter: blur(6px);
+  pointer-events: none;
+  user-select: none;
+}
+.gate-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: rgba(250,247,240,0.7);
+  backdrop-filter: blur(2px);
+  border-radius: 8px;
+  padding: 2rem 1.5rem;
+  z-index: 5;
+}
+.gate-overlay h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 0.5rem;
+}
+.gate-overlay p {
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 1.25rem;
+  max-width: 280px;
+}
+.gate-overlay .btn-gate {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.7rem 1.5rem;
+  background: var(--cyan);
+  color: var(--navy);
+  font-family: var(--font);
+  font-size: 0.82rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 6px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+.gate-overlay .btn-gate:hover {
+  box-shadow: 0 0 24px rgba(0,196,217,0.4);
+}
 
-    /* Footer note */
-    .footer-note {
-      font-size: 11px;
-      color: #C4C9D4;
-      text-align: center;
-      padding: 0.75rem 1.75rem;
-      border-top: 1px solid var(--border);
-    }
+/* Footer note */
+.footer-note {
+  font-size: 0.65rem;
+  color: #C4C9D4;
+  text-align: center;
+  padding: 0.75rem 1.75rem;
+  border-top: 1px solid var(--border);
+}
 
-    /* ── Powered by / branding ── */
-    .powered {
-      margin-top: 1.25rem;
-      font-size: 12px;
-      color: #9CA3AF;
-      text-align: center;
-    }
-    .powered a { color: var(--teal); text-decoration: none; }
-    .powered a:hover { text-decoration: underline; }
+/* Powered by */
+.powered {
+  margin-top: 1.5rem;
+  font-size: 0.72rem;
+  color: #9CA3AF;
+  text-align: center;
+}
+.powered a {
+  color: var(--cyan);
+  text-decoration: none;
+  font-weight: 500;
+}
+.powered a:hover { text-decoration: underline; }
 
-    /* ── Top nav ── */
-    .topnav {
-      background: var(--navy);
-      height: 52px;
-      display: flex;
-      align-items: center;
-      padding: 0 1.5rem;
-      gap: 1.5rem;
-      width: 100%;
-      position: fixed;
-      top: 0; left: 0;
-      z-index: 1000;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-    }
-    body { padding-top: calc(52px + 2rem); }
-    .nav-logo {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      text-decoration: none;
-    }
-    .nav-logo-icon { font-size: 18px; line-height: 1; }
-    .nav-logo-text {
-      font-size: 16px; font-weight: 600; color: var(--white);
-      letter-spacing: -0.3px;
-    }
-    .nav-logo-text span { color: var(--teal); }
-    .nav-divider {
-      width: 1px; height: 20px;
-      background: rgba(255,255,255,0.15);
-    }
-    .nav-links { display: flex; gap: 4px; }
-    .nav-link {
-      font-size: 13px; font-weight: 500;
-      color: rgba(255,255,255,0.55);
-      text-decoration: none;
-      padding: 5px 12px;
-      border-radius: 6px;
-      transition: all 0.15s;
-    }
-    .nav-link:hover { color: var(--white); background: rgba(255,255,255,0.08); }
-    .nav-link.active { color: var(--teal); background: rgba(0,180,166,0.12); }
-    .nav-badge {
-      font-size: 10px; background: #F5A623; color: var(--navy);
-      padding: 1px 5px; border-radius: 4px; margin-left: 4px;
-      font-weight: 600; vertical-align: middle;
-    }
-  </style>
+@media (max-width: 768px) {
+  .demo-nav { padding: 0.75rem 1rem; flex-wrap: wrap; gap: 0.5rem; }
+  .demo-nav-right { display: none; }
+}
+@media (max-width: 600px) {
+  .nav-links { display: none; }
+  .demo-container { padding: 1.5rem 0.75rem 2rem; }
+}
+</style>
 </head>
 <body>
 
-  <nav class="topnav">
-    <a class="nav-logo" href="index.html">
-      <span class="nav-logo-text">Russell <span>SPC</span></span>
-    </a>
-    <div class="nav-divider"></div>
+<!-- NAV -->
+<nav class="demo-nav">
+  <div class="demo-nav-left">
+    <a href="index.html" class="demo-nav-logo">Russell <span>SPC</span></a>
+    <div class="demo-nav-divider"></div>
     <div class="nav-links">
-      <a class="nav-link" href="index.html">Home</a>
-      <a class="nav-link active" href="score.html">Score Checker</a>
-      <a class="nav-link" href="leads.html">Lead Radar</a>
-      <a class="nav-link" href="rankradar.html">RankRadar</a>
-      <a class="nav-link" href="prompt-sweeper.html">Prompt Sweeper</a>
-      <a class="nav-link" href="answerweave.html">AnswerWeave</a>
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="score.html" class="nav-link active">SEOrcery</a>
+      <a href="leads.html" class="nav-link">Lead Radar</a>
+      <a href="rankradar.html" class="nav-link">Rival Vectors</a>
+      <a href="prompt-sweeper.html" class="nav-link">Prompt Sweeper</a>
+      <a href="answerweave.html" class="nav-link">AnswerWeave</a>
     </div>
-  </nav>
+  </div>
+</nav>
 
+<!-- DEMO TOOL -->
+<div class="demo-container">
   <div class="card">
 
     <div class="card-header">
       <h1>Free Local SEO Score</h1>
-      <p>Real data from Google · PageSpeed · Keyword analysis</p>
+      <p>Real data from Google &middot; PageSpeed &middot; Keyword analysis</p>
     </div>
 
     <div class="card-body">
       <div class="field">
         <label>Business name <span style="color:#E53E3E;">*</span></label>
-        <input id="biz" type="text" placeholder="e.g. Sunrise Plumbing" autocomplete="organization" />
+        <input id="biz" type="text" placeholder="e.g. Sunrise Plumbing" autocomplete="organization">
       </div>
 
       <div class="field">
         <label>City / market <span style="color:#E53E3E;">*</span></label>
-        <input id="city" type="text" placeholder="e.g. Fort Lauderdale, FL" autocomplete="address-level2" />
+        <input id="city" type="text" placeholder="e.g. Fort Lauderdale, FL" autocomplete="address-level2">
       </div>
 
       <div class="field">
         <label>Website URL <span class="opt">(optional — enables speed + keyword checks)</span></label>
-        <input id="siteUrl" type="url" placeholder="https://yourbusiness.com" autocomplete="url" />
+        <input id="siteUrl" type="url" placeholder="https://yourbusiness.com" autocomplete="url">
         <p class="hint">Include https:// for accurate results</p>
       </div>
 
       <button class="btn-analyze" id="btn" onclick="runScore()">
-        Analyze My SEO
+        Generate my Score
       </button>
     </div>
 
@@ -417,28 +503,44 @@
       <div id="biz-found-row"></div>
 
       <div class="score-row">
-        <div>
-          <div class="score-label">Overall SEO Score</div>
-          <div>
-            <span class="score-big" id="overall-num">—</span>
+        <div class="score-donut">
+          <svg width="110" height="110" viewBox="0 0 110 110">
+            <circle class="donut-bg" cx="55" cy="55" r="44"/>
+            <circle class="donut-ring" id="donut-ring" cx="55" cy="55" r="44" stroke="var(--cyan)" stroke-dasharray="276.5" stroke-dashoffset="276.5"/>
+          </svg>
+          <div class="donut-center">
+            <span class="score-big" id="overall-num">&mdash;</span>
             <span class="score-denom">/100</span>
           </div>
         </div>
-        <span class="grade-pill" id="grade"></span>
+        <div class="score-right">
+          <div class="score-label">Overall SEO Score</div>
+          <span class="grade-pill" id="grade"></span>
+        </div>
       </div>
 
-      <div class="factors" id="factors"></div>
+      <div id="factors-free"></div>
 
-      <div class="tags" id="tags"></div>
-
-      <div class="cta-box">
-        <div class="cta-headline" id="cta-headline"></div>
-        <div class="cta-body" id="cta-body"></div>
-        <div class="cta-extras" id="cta-extras"></div>
-        <!-- CTA button -->
-        <button class="btn-cta" onclick="openCTA()">
-          Get a free fix plan →
-        </button>
+      <div class="gated-wrap" id="gated-wrap" style="display:none;">
+        <div class="gate-overlay">
+          <h4>Want the full breakdown?</h4>
+          <p>We build custom tools tailored to your specific criteria, delivering deeper insights and more closing opportunities.</p>
+          <a href="index.html#contact" class="btn-gate">
+            Let's Build Together &rarr;
+          </a>
+        </div>
+        <div class="gated-content">
+          <div id="factors-locked"></div>
+          <div id="tags"></div>
+          <div class="cta-box">
+            <div class="cta-headline" id="cta-headline"></div>
+            <div class="cta-body" id="cta-body"></div>
+            <div class="cta-extras" id="cta-extras"></div>
+            <button class="btn-cta" onclick="openCTA()">
+              Get a free fix plan &rarr;
+            </button>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -452,285 +554,276 @@
   <div class="powered">
     Powered by <a href="https://russellspc.com" target="_blank">Russell SPC</a>
   </div>
+</div>
 
 <script>
-  // ================================================================
-  //  ⬇️  STEP 1: Replace with your deployed Cloudflare Worker URL
-  //  After running: wrangler deploy
-  //  It will print: https://seorcery-proxy.YOUR_SUBDOMAIN.workers.dev
-  // ================================================================
-  const WORKER_URL = "https://seorcery-proxy.rruss7997.workers.dev";
+const WORKER_URL = "https://seorcery-proxy.rruss7997.workers.dev";
+const CTA_URL = "https://russellspc.com/";
 
-  // ================================================================
-  // ================================================================
-  const CTA_URL = "https://russellspc.com/";
+const FACTORS = [
+  {
+    key:    "gbp",
+    label:  "Google Business Profile",
+    color:  "#00C4D9",
+    extraFn: d => d.hasHours    ? "Hours listed \u2713"    :
+                  d.hasWebsite  ? "Website linked \u2713"  : "Profile may be incomplete",
+  },
+  {
+    key:    "reviews",
+    label:  "Reviews & reputation",
+    color:  "#F5A623",
+    extraFn: d => d.reviewCount != null
+      ? `${d.reviewCount} review${d.reviewCount !== 1 ? "s" : ""} \u00b7 ${d.rating || "\u2014"} \u2605`
+      : "",
+  },
+  {
+    key:    "speed",
+    label:  "Mobile page speed",
+    color:  "#00C4D9",
+    extraFn: d => {
+      if (d.speedNote) return d.speedNote;
+      const parts = [];
+      if (d.fcp) parts.push(`FCP ${d.fcp}`);
+      if (d.lcp) parts.push(`LCP ${d.lcp}`);
+      return parts.join(" \u00b7 ") || (d.speedTested ? "" : "Add website URL to check");
+    },
+  },
+  {
+    key:    "vitals",
+    label:  "Core Web Vitals",
+    color:  "#E04E9B",
+    extraFn: d => {
+      if (!d.vitalsTested) return "Add website URL to check";
+      if (d.vitalsDetails?.length > 0) return d.vitalsDetails.join(" \u00b7 ");
+      if (d.vitalsNote) return d.vitalsNote;
+      return "";
+    },
+  },
+  {
+    key:    "keywords",
+    label:  "Local keyword alignment",
+    color:  "#7C3AED",
+    extraFn: d => {
+      if (!d.keywordTested) return "Add website URL to check";
+      if (d.keywordDetails?.length > 0) return d.keywordDetails.slice(0, 3).join(" \u00b7 ");
+      if (d.cityOccurrences != null) return `City term found ${d.cityOccurrences}\u00d7 on page`;
+      return "";
+    },
+  },
+  {
+    key:    "techSeo",
+    label:  "Technical SEO",
+    color:  "#2563EB",
+    extraFn: d => {
+      if (!d.techSeoTested) return "Add website URL to check";
+      if (d.techSeoDetails?.length > 0) return d.techSeoDetails.slice(0, 3).join(" \u00b7 ");
+      return "";
+    },
+  },
+  {
+    key:    "citations",
+    label:  "Citation consistency *",
+    color:  "#F5A623",
+    extraFn: () => "* Estimated \u2014 full audit with BrightLocal",
+  },
+];
 
-  // ================================================================
+function openCTA() {
+  const biz  = document.getElementById("biz").value.trim();
+  const city = document.getElementById("city").value.trim();
+  const dest = CTA_URL.startsWith("mailto:")
+    ? `${CTA_URL}&body=Business: ${encodeURIComponent(biz)}%0ACity: ${encodeURIComponent(city)}`
+    : CTA_URL;
+  window.open(dest, "_blank");
+}
 
-  const FACTORS = [
-    {
-      key:    "gbp",
-      label:  "Google Business Profile",
-      color:  "#00B4A6",
-      extraFn: d => d.hasHours    ? "Hours listed ✓"    :
-                    d.hasWebsite  ? "Website linked ✓"  : "Profile may be incomplete",
-    },
-    {
-      key:    "reviews",
-      label:  "Reviews & reputation",
-      color:  "#F5A623",
-      extraFn: d => d.reviewCount != null
-        ? `${d.reviewCount} review${d.reviewCount !== 1 ? "s" : ""} · ${d.rating || "—"} ★`
-        : "",
-    },
-    {
-      key:    "speed",
-      label:  "Mobile page speed",
-      color:  "#00B4A6",
-      extraFn: d => {
-        if (d.speedNote) return d.speedNote;
-        const parts = [];
-        if (d.fcp) parts.push(`FCP ${d.fcp}`);
-        if (d.lcp) parts.push(`LCP ${d.lcp}`);
-        return parts.join(" · ") || (d.speedTested ? "" : "Add website URL to check");
-      },
-    },
-    {
-      key:    "vitals",
-      label:  "Core Web Vitals",
-      color:  "#E04E9B",
-      extraFn: d => {
-        if (!d.vitalsTested) return "Add website URL to check";
-        if (d.vitalsDetails?.length > 0) return d.vitalsDetails.join(" · ");
-        if (d.vitalsNote) return d.vitalsNote;
-        return "";
-      },
-    },
-    {
-      key:    "keywords",
-      label:  "Local keyword alignment",
-      color:  "#7C3AED",
-      extraFn: d => {
-        if (!d.keywordTested) return "Add website URL to check";
-        if (d.keywordDetails?.length > 0) return d.keywordDetails.slice(0, 3).join(" · ");
-        if (d.cityOccurrences != null) return `City term found ${d.cityOccurrences}× on page`;
-        return "";
-      },
-    },
-    {
-      key:    "techSeo",
-      label:  "Technical SEO",
-      color:  "#2563EB",
-      extraFn: d => {
-        if (!d.techSeoTested) return "Add website URL to check";
-        if (d.techSeoDetails?.length > 0) return d.techSeoDetails.slice(0, 3).join(" · ");
-        return "";
-      },
-    },
-    {
-      key:    "citations",
-      label:  "Citation consistency *",
-      color:  "#F5A623",
-      extraFn: () => "* Estimated — full audit with BrightLocal",
-    },
-  ];
+function fixUrl(raw) {
+  if (!raw) return "";
+  let u = raw.trim();
+  u = u.replace(/^(https?)\/{2}/, "$1://");
+  if (u && !/^https?:\/\//i.test(u)) u = "https://" + u;
+  u = u.replace(/\/+$/, "");
+  return u;
+}
 
-  function openCTA() {
-    const biz  = document.getElementById("biz").value.trim();
-    const city = document.getElementById("city").value.trim();
-    const dest = CTA_URL.startsWith("mailto:")
-      ? `${CTA_URL}&body=Business: ${encodeURIComponent(biz)}%0ACity: ${encodeURIComponent(city)}`
-      : CTA_URL;
-    window.open(dest, "_blank");
+async function runScore() {
+  const biz     = document.getElementById("biz").value.trim();
+  const city    = document.getElementById("city").value.trim();
+  const siteUrl = fixUrl(document.getElementById("siteUrl").value);
+
+  if (siteUrl) document.getElementById("siteUrl").value = siteUrl;
+
+  if (!biz)  { shake("biz");  return; }
+  if (!city) { shake("city"); return; }
+
+  const btn = document.getElementById("btn");
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner"></span> Analyzing\u2026`;
+
+  try {
+    const params = new URLSearchParams({ action: "score", bizName: biz, city });
+    if (siteUrl) params.set("siteUrl", siteUrl);
+
+    const res  = await fetch(`${WORKER_URL}?${params}`);
+    if (!res.ok) throw new Error(`Worker returned ${res.status}`);
+    const d = await res.json();
+    if (d.error) throw new Error(d.error);
+
+    renderResults(d, biz, city);
+
+  } catch (err) {
+    btn.disabled = false;
+    btn.innerHTML = "Generate my Score";
+    alert(
+      "Could not reach the scoring service.\n\n" +
+      "Make sure the Worker is deployed and running.\n\n" +
+      err.message
+    );
+    return;
   }
 
-  function fixUrl(raw) {
-    if (!raw) return "";
-    let u = raw.trim();
-    // Fix missing colon: https// → https://
-    u = u.replace(/^(https?)\/{2}/, "$1://");
-    // Add https:// if no protocol at all
-    if (u && !/^https?:\/\//i.test(u)) u = "https://" + u;
-    // Remove trailing slash for consistency
-    u = u.replace(/\/+$/, "");
-    return u;
+  btn.innerHTML = "Re-analyze";
+  btn.disabled  = false;
+}
+
+function renderResults(d, biz, city) {
+  const bfRow = document.getElementById("biz-found-row");
+  if (d.placesFound && d.bizName) {
+    bfRow.innerHTML =
+      `<div class="biz-found"><span class="dot"></span>Found on Google: ${esc(d.bizName)}</div>`;
+  } else {
+    bfRow.innerHTML =
+      `<div class="biz-found" style="background:#FEE2E2;color:#991B1B;">
+         <span class="dot" style="background:#EF4444;"></span>
+         Not found on Google Maps
+       </div>`;
   }
 
-  async function runScore() {
-    const biz     = document.getElementById("biz").value.trim();
-    const city    = document.getElementById("city").value.trim();
-    const siteUrl = fixUrl(document.getElementById("siteUrl").value);
+  const overall = d.overall ?? 0;
+  document.getElementById("overall-num").textContent = overall;
 
-    // Update the input so user sees the corrected URL
-    if (siteUrl) document.getElementById("siteUrl").value = siteUrl;
+  // Animate donut ring
+  const circumference = 276.5;
+  const donutOffset = circumference - (overall / 100) * circumference;
+  const donutRing = document.getElementById("donut-ring");
+  const donutColor = overall >= 75 ? "#16A34A" : overall >= 55 ? "#CA8A04" : "#DC2626";
+  donutRing.setAttribute("stroke", donutColor);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    donutRing.style.strokeDashoffset = donutOffset;
+  }));
 
-    if (!biz)  { shake("biz");  return; }
-    if (!city) { shake("city"); return; }
-
-    const btn = document.getElementById("btn");
-    btn.disabled = true;
-    btn.innerHTML = `<span class="spinner"></span> Analyzing…`;
-
-    try {
-      const params = new URLSearchParams({ action: "score", bizName: biz, city });
-      if (siteUrl) params.set("siteUrl", siteUrl);
-
-      const res  = await fetch(`${WORKER_URL}?${params}`);
-      if (!res.ok) throw new Error(`Worker returned ${res.status}`);
-      const d = await res.json();
-      if (d.error) throw new Error(d.error);
-
-      renderResults(d, biz, city);
-
-    } catch (err) {
-      btn.disabled = false;
-      btn.innerHTML = "Analyze My SEO";
-      alert(
-        "Could not reach the scoring service.\n\n" +
-        "Make sure WORKER_URL in index.html is set to your deployed Worker address.\n\n" +
-        err.message
-      );
-      return;
-    }
-
-    btn.innerHTML = "Re-analyze";
-    btn.disabled  = false;
+  let gradeText, gradeColor, gradeBg;
+  if (overall >= 75) {
+    gradeText = "Strong";   gradeColor = "#166534"; gradeBg = "#DCFCE7";
+  } else if (overall >= 55) {
+    gradeText = "Fair";     gradeColor = "#854D0E"; gradeBg = "#FEF9C3";
+  } else {
+    gradeText = "Needs Work"; gradeColor = "#991B1B"; gradeBg = "#FEE2E2";
   }
+  const gEl = document.getElementById("grade");
+  gEl.textContent        = gradeText;
+  gEl.style.background   = gradeBg;
+  gEl.style.color        = gradeColor;
 
-  function renderResults(d, biz, city) {
-    // ── Biz found badge ────────────────────────────────────
-    const bfRow = document.getElementById("biz-found-row");
-    if (d.placesFound && d.bizName) {
-      bfRow.innerHTML =
-        `<div class="biz-found"><span class="dot"></span>Found on Google: ${esc(d.bizName)}</div>`;
+  const FREE_COUNT = 3;
+  const freeEl   = document.getElementById("factors-free");
+  const lockedEl = document.getElementById("factors-locked");
+  freeEl.innerHTML   = "";
+  lockedEl.innerHTML = "";
+
+  FACTORS.forEach((f, i) => {
+    const val   = d[f.key];
+    const pct   = val != null ? val : 0;
+    const label = val != null ? pct + "%" : "N/A";
+    const extra = f.extraFn ? f.extraFn(d) : "";
+    const valClass = pct < 50 ? "factor-val-low" : pct < 70 ? "factor-val-mid" : "factor-val-good";
+
+    const html = `
+      <div class="factor-chip">
+        <span class="factor-dot" style="background:${f.color};"></span>
+        <span class="factor-name">${f.label}</span>
+        ${extra ? `<span class="factor-extra">${esc(extra)}</span>` : ""}
+        <span class="factor-val ${valClass}">${label}</span>
+      </div>`;
+
+    if (i < FREE_COUNT) {
+      freeEl.innerHTML += html;
     } else {
-      bfRow.innerHTML =
-        `<div class="biz-found" style="background:#FEE2E2;color:#991B1B;">
-           <span class="dot" style="background:#EF4444;"></span>
-           Not found on Google Maps
-         </div>`;
+      lockedEl.innerHTML += html;
     }
+  });
 
-    // ── Overall score ──────────────────────────────────────
-    const overall = d.overall ?? 0;
-    document.getElementById("overall-num").textContent = overall;
+  // Show the gated section
+  document.getElementById("gated-wrap").style.display = "block";
 
-    let gradeText, gradeColor, gradeBg;
-    if (overall >= 75) {
-      gradeText = "Strong";   gradeColor = "#166534"; gradeBg = "#DCFCE7";
-    } else if (overall >= 55) {
-      gradeText = "Fair";     gradeColor = "#854D0E"; gradeBg = "#FEF9C3";
-    } else {
-      gradeText = "Needs Work"; gradeColor = "#991B1B"; gradeBg = "#FEE2E2";
-    }
-    const gEl = document.getElementById("grade");
-    gEl.textContent        = gradeText;
-    gEl.style.background   = gradeBg;
-    gEl.style.color        = gradeColor;
+  const tagsEl = document.getElementById("tags");
+  tagsEl.innerHTML = "";
+  const addTag = (text, cls) => {
+    tagsEl.innerHTML += `<span class="tag ${cls}">${text}</span>`;
+  };
 
-    // ── Factor bars ────────────────────────────────────────
-    const factorsEl = document.getElementById("factors");
-    factorsEl.innerHTML = "";
+  if (!d.placesFound)                           addTag("Not on Google Maps", "tag-alert");
+  if (d.gbp != null && d.gbp < 50)              addTag("Incomplete GBP profile", "tag-warn");
+  if (d.reviews != null && d.reviews < 40)      addTag("Few or no reviews", "tag-warn");
+  if (d.speed != null && d.speed < 50)          addTag("Slow mobile speed", "tag-warn");
+  if (d.vitals != null && d.vitals < 50)        addTag("Poor Core Web Vitals", "tag-warn");
+  if (d.keywords != null && d.keywords < 40)    addTag("Weak local keywords", "tag-warn");
+  if (d.techSeo != null && d.techSeo < 50)      addTag("Technical SEO issues", "tag-warn");
+  if (d.gbp != null && d.gbp >= 80)             addTag("Strong GBP", "tag-ok");
+  if (d.reviews != null && d.reviews >= 70)     addTag("Active reviews", "tag-ok");
+  if (d.speed != null && d.speed >= 75)         addTag("Fast mobile site", "tag-ok");
+  if (d.vitals != null && d.vitals >= 75)       addTag("Good Web Vitals", "tag-ok");
+  if (d.keywords != null && d.keywords >= 70)   addTag("Good keyword coverage", "tag-ok");
+  if (d.techSeo != null && d.techSeo >= 75)     addTag("Solid technical SEO", "tag-ok");
+  if (!d.speedTested)                           addTag("Speed not checked (no URL)", "tag-info");
+  if (!d.keywordTested)                         addTag("Keywords not checked (no URL)", "tag-info");
 
-    FACTORS.forEach((f, i) => {
-      const val   = d[f.key];
-      const pct   = val != null ? val : 0;
-      const label = val != null ? pct + "%" : "N/A";
-      const extra = f.extraFn ? f.extraFn(d) : "";
-      const lowColor = pct < 50 ? "#EF4444" : pct < 70 ? "#F59E0B" : f.color;
+  const topIssues = [];
+  if (!d.placesFound)                        topIssues.push("claiming your Google Business Profile");
+  else if (d.gbp < 60)                       topIssues.push("completing your GBP profile");
+  if (d.reviews != null && d.reviews < 50)   topIssues.push("building your review stream");
+  if (d.speed != null && d.speed < 50)       topIssues.push("improving mobile page speed");
+  if (d.vitals != null && d.vitals < 50)     topIssues.push("fixing Core Web Vitals");
+  if (d.keywords != null && d.keywords < 50) topIssues.push("adding local keywords to your site");
+  if (d.techSeo != null && d.techSeo < 60)   topIssues.push("fixing technical SEO basics");
 
-      factorsEl.innerHTML += `
-        <div class="factor-row">
-          <div class="factor-meta">
-            <span class="factor-name">${f.label}</span>
-            <span class="factor-val" style="color:${lowColor};">${label}</span>
-          </div>
-          ${extra ? `<div class="factor-extra">${esc(extra)}</div>` : ""}
-          <div class="bar-track">
-            <div class="bar-fill" id="bf${i}" style="background:${f.color};"></div>
-          </div>
-        </div>`;
-    });
+  document.getElementById("cta-headline").textContent =
+    overall >= 75 ? `${biz} is performing well!` :
+    overall >= 55 ? `${biz} has room to grow in ${city}` :
+                    `${biz} has real SEO gaps in ${city}`;
 
-    // Animate bars after DOM paint
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      FACTORS.forEach((f, i) => {
-        const v  = d[f.key];
-        const el = document.getElementById("bf" + i);
-        if (el && v != null) el.style.width = v + "%";
-      });
-    }));
+  document.getElementById("cta-body").textContent =
+    overall >= 75
+      ? `Your local SEO foundation is solid. A few targeted refinements could push you to the top of local results in ${city}.`
+      : overall >= 55
+      ? `You're visible in ${city} but leaving leads on the table. Most of these gaps are quick wins with the right help.`
+      : `The good news: low scores mean big opportunities. Most of these gaps can be fixed faster than you'd think.`;
 
-    // ── Tags ───────────────────────────────────────────────
-    const tagsEl = document.getElementById("tags");
-    tagsEl.innerHTML = "";
-    const addTag = (text, cls) => {
-      tagsEl.innerHTML += `<span class="tag ${cls}">${text}</span>`;
-    };
-
-    if (!d.placesFound)                           addTag("Not on Google Maps", "tag-alert");
-    if (d.gbp != null && d.gbp < 50)              addTag("Incomplete GBP profile", "tag-warn");
-    if (d.reviews != null && d.reviews < 40)      addTag("Few or no reviews", "tag-warn");
-    if (d.speed != null && d.speed < 50)          addTag("Slow mobile speed", "tag-warn");
-    if (d.vitals != null && d.vitals < 50)        addTag("Poor Core Web Vitals", "tag-warn");
-    if (d.keywords != null && d.keywords < 40)    addTag("Weak local keywords", "tag-warn");
-    if (d.techSeo != null && d.techSeo < 50)      addTag("Technical SEO issues", "tag-warn");
-    if (d.gbp != null && d.gbp >= 80)             addTag("Strong GBP", "tag-ok");
-    if (d.reviews != null && d.reviews >= 70)     addTag("Active reviews", "tag-ok");
-    if (d.speed != null && d.speed >= 75)         addTag("Fast mobile site", "tag-ok");
-    if (d.vitals != null && d.vitals >= 75)       addTag("Good Web Vitals", "tag-ok");
-    if (d.keywords != null && d.keywords >= 70)   addTag("Good keyword coverage", "tag-ok");
-    if (d.techSeo != null && d.techSeo >= 75)     addTag("Solid technical SEO", "tag-ok");
-    if (!d.speedTested)                           addTag("Speed not checked (no URL)", "tag-info");
-    if (!d.keywordTested)                         addTag("Keywords not checked (no URL)", "tag-info");
-
-    // ── CTA messaging ──────────────────────────────────────
-    const topIssues = [];
-    if (!d.placesFound)                        topIssues.push("claiming your Google Business Profile");
-    else if (d.gbp < 60)                       topIssues.push("completing your GBP profile");
-    if (d.reviews != null && d.reviews < 50)   topIssues.push("building your review stream");
-    if (d.speed != null && d.speed < 50)       topIssues.push("improving mobile page speed");
-    if (d.vitals != null && d.vitals < 50)     topIssues.push("fixing Core Web Vitals");
-    if (d.keywords != null && d.keywords < 50) topIssues.push("adding local keywords to your site");
-    if (d.techSeo != null && d.techSeo < 60)   topIssues.push("fixing technical SEO basics");
-
-    document.getElementById("cta-headline").textContent =
-      overall >= 75 ? `${biz} is performing well!` :
-      overall >= 55 ? `${biz} has room to grow in ${city}` :
-                      `${biz} has real SEO gaps in ${city}`;
-
-    document.getElementById("cta-body").textContent =
-      overall >= 75
-        ? `Your local SEO foundation is solid. A few targeted refinements could push you to the top of local results in ${city}.`
-        : overall >= 55
-        ? `You're visible in ${city} but leaving leads on the table. Most of these gaps are quick wins with the right help.`
-        : `The good news: low scores mean big opportunities. Most of these gaps can be fixed faster than you'd think.`;
-
-    if (topIssues.length > 0) {
-      document.getElementById("cta-extras").textContent =
-        "Top priorities: " + topIssues.slice(0, 3).join(", ") + ".";
-    } else {
-      document.getElementById("cta-extras").textContent = "";
-    }
-
-    document.getElementById("results").style.display = "block";
-    document.getElementById("results").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  if (topIssues.length > 0) {
+    document.getElementById("cta-extras").textContent =
+      "Top priorities: " + topIssues.slice(0, 3).join(", ") + ".";
+  } else {
+    document.getElementById("cta-extras").textContent = "";
   }
 
-  function shake(id) {
-    const el = document.getElementById(id);
-    el.style.borderColor = "#EF4444";
-    el.focus();
-    setTimeout(() => { el.style.borderColor = ""; }, 2000);
-  }
+  document.getElementById("results").style.display = "block";
+  document.getElementById("results").scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
 
-  function esc(str) {
-    return String(str)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
-  }
+function shake(id) {
+  const el = document.getElementById(id);
+  el.style.borderColor = "#EF4444";
+  el.focus();
+  setTimeout(() => { el.style.borderColor = ""; }, 2000);
+}
+
+function esc(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
 </script>
 </body>
 </html>

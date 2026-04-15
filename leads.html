@@ -1,572 +1,634 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SEOrcery — Lead Radar</title>
-  <meta name="description" content="Find local businesses with weak SEO. Rank them by opportunity. Export and close." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <!-- Leaflet for map (no API key needed) -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEOrcery Lead Radar — Russell SPC</title>
+<meta name="description" content="Lead Radar — find local businesses with weak SEO, rank by opportunity, and export leads. Built by Russell SPC.">
+<link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAO4z3FP7pPigO_Onzxi2CUJ7ucFO8peOM" defer></script>
+<style>
+:root {
+  --linen: #FAF7F0;
+  --navy: #0B1F3A;
+  --navy2: #0F2A4E;
+  --cyan: #00C4D9;
+  --cyan2: #00b0c2;
+  --gun: #1E1E1E;
+  --gun-light: #444444;
+  --white: #ffffff;
+  --offwhite: #F5F3EE;
+  --border: #E5E7EB;
+  --border-navy: rgba(11,31,58,0.12);
+  --muted: #6B7280;
+  --text: #1E1E1E;
+  --green: #22C55E;
+  --red: #EF4444;
+  --amber: #F59E0B;
+  --gold: #F5A623;
+  --sidebar: 320px;
+  --font: 'Inter', sans-serif;
+}
 
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    :root {
-      --navy:    #0D1B2A;
-      --navy2:   #132233;
-      --teal:    #00B4A6;
-      --teal2:   #009e91;
-      --gold:    #F5A623;
-      --coral:   #FF6B35;
-      --green:   #22C55E;
-      --red:     #EF4444;
-      --amber:   #F59E0B;
-      --white:   #FFFFFF;
-      --offwhite:#F7F8FA;
-      --border:  #E5E7EB;
-      --muted:   #6B7280;
-      --text:    #111827;
-      --sidebar: 320px;
-    }
+body {
+  font-family: var(--font);
+  background: var(--offwhite);
+  color: var(--text);
+  min-height: 100vh;
+}
 
-    body {
-      font-family: "DM Sans", system-ui, sans-serif;
-      background: var(--offwhite);
-      color: var(--text);
-      min-height: 100vh;
-    }
+/* ── Top nav ── */
+.demo-nav {
+  background: var(--navy);
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+}
+.demo-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+.demo-nav-logo {
+  font-family: var(--font);
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--white);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+}
+.demo-nav-logo span { color: var(--cyan); }
+.demo-nav-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(255,255,255,0.15);
+}
+.nav-links { display: flex; gap: 4px; }
+.nav-link {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.55);
+  text-decoration: none;
+  padding: 5px 12px;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+.nav-link:hover { color: var(--white); background: rgba(255,255,255,0.08); }
+.nav-link.active { color: var(--cyan); background: rgba(0,196,217,0.12); }
+.nav-badge {
+  font-size: 0.6rem;
+  background: var(--gold);
+  color: var(--navy);
+  padding: 1px 5px;
+  border-radius: 4px;
+  margin-left: 4px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+.demo-nav-back {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--cyan);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: opacity 0.2s;
+}
+.demo-nav-back:hover { opacity: 0.8; }
 
-    /* ── Top nav ── */
-    .topnav {
-      background: var(--navy);
-      height: 52px;
-      display: flex;
-      align-items: center;
-      padding: 0 1.5rem;
-      gap: 1.5rem;
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-    }
-    .nav-logo {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      text-decoration: none;
-    }
-    .nav-logo-icon {
-      font-size: 18px;
-      line-height: 1;
-    }
-    .nav-logo-text {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--white);
-      letter-spacing: -0.3px;
-    }
-    .nav-logo-text span { color: var(--teal); }
-    .nav-divider {
-      width: 1px;
-      height: 20px;
-      background: rgba(255,255,255,0.15);
-    }
-    .nav-links { display: flex; gap: 4px; }
-    .nav-link {
-      font-size: 13px;
-      font-weight: 500;
-      color: rgba(255,255,255,0.55);
-      text-decoration: none;
-      padding: 5px 12px;
-      border-radius: 6px;
-      transition: all 0.15s;
-    }
-    .nav-link:hover { color: var(--white); background: rgba(255,255,255,0.08); }
-    .nav-link.active { color: var(--teal); background: rgba(0,180,166,0.12); }
-    .nav-badge {
-      font-size: 10px;
-      background: var(--gold);
-      color: var(--navy);
-      padding: 1px 5px;
-      border-radius: 4px;
-      margin-left: 4px;
-      font-weight: 600;
-      vertical-align: middle;
-    }
+/* ── App shell ── */
+.app {
+  display: grid;
+  grid-template-columns: var(--sidebar) 1fr;
+  height: calc(100vh - 52px);
+  overflow: hidden;
+}
 
-    /* ── App shell ── */
-    .app {
-      display: grid;
-      grid-template-columns: var(--sidebar) 1fr;
-      height: calc(100vh - 52px);
-      overflow: hidden;
-    }
+/* ── Sidebar ── */
+.sidebar {
+  background: var(--white);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.sidebar-head {
+  padding: 1.25rem 1.25rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.sidebar-sub {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 3px;
+  line-height: 1.5;
+}
+.sidebar-form { padding: 1rem 1.25rem; }
 
-    /* ── Sidebar ── */
-    .sidebar {
-      background: var(--white);
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-    }
-    .sidebar-head {
-      padding: 1.25rem 1.25rem 0.75rem;
-      border-bottom: 1px solid var(--border);
-    }
-    .sidebar-title {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--navy);
-      display: flex;
-      align-items: center;
-      gap: 7px;
-    }
-    .sidebar-sub {
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 3px;
-      line-height: 1.5;
-    }
-    .sidebar-form { padding: 1rem 1.25rem; flex: 1; }
+.field { margin-bottom: 14px; }
+.field label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 5px;
+}
+.field input,
+.field select {
+  width: 100%;
+  height: 38px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  padding: 0 10px;
+  font-size: 0.78rem;
+  font-family: var(--font);
+  color: var(--text);
+  background: var(--white);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  appearance: none;
+}
+.field input:focus,
+.field select:focus {
+  outline: none;
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 3px rgba(0,196,217,0.12);
+}
+.field input::placeholder { color: #C4C9D4; }
+.select-wrap { position: relative; }
+.select-wrap::after {
+  content: "\25BE";
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 0.72rem;
+  pointer-events: none;
+}
 
-    .field { margin-bottom: 14px; }
-    .field label {
-      display: block;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 5px;
-    }
-    .field input,
-    .field select {
-      width: 100%;
-      height: 38px;
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
-      padding: 0 10px;
-      font-size: 13px;
-      font-family: inherit;
-      color: var(--text);
-      background: var(--white);
-      transition: border-color 0.15s;
-      appearance: none;
-    }
-    .field input:focus,
-    .field select:focus {
-      outline: none;
-      border-color: var(--teal);
-    }
-    .field input::placeholder { color: #C4C9D4; }
-    .select-wrap { position: relative; }
-    .select-wrap::after {
-      content: "▾";
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--muted);
-      font-size: 12px;
-      pointer-events: none;
-    }
+.btn-scan {
+  width: 100%;
+  height: 42px;
+  background: var(--navy);
+  color: var(--white);
+  border: none;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: var(--font);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.2s;
+  margin-top: 4px;
+}
+.btn-scan:hover:not(:disabled) { background: var(--navy2); }
+.btn-scan:disabled { background: #9CA3AF; cursor: not-allowed; }
 
-    .btn-scan {
-      width: 100%;
-      height: 42px;
-      background: var(--navy);
-      color: var(--white);
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      font-family: inherit;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: background 0.15s;
-      margin-top: 4px;
-    }
-    .btn-scan:hover:not(:disabled) { background: var(--navy2); }
-    .btn-scan:disabled { background: #9CA3AF; cursor: not-allowed; }
+/* Progress */
+.progress-wrap {
+  display: none;
+  padding: 0 1.25rem 1rem;
+}
+.progress-label {
+  font-size: 0.65rem;
+  color: var(--muted);
+  margin-bottom: 5px;
+  display: flex;
+  justify-content: space-between;
+}
+.progress-track {
+  height: 5px;
+  background: var(--offwhite);
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.progress-fill {
+  height: 100%;
+  background: var(--cyan);
+  border-radius: 3px;
+  width: 0;
+  transition: width 0.3s ease;
+}
+.progress-log {
+  margin-top: 8px;
+  font-size: 0.65rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  max-height: 80px;
+  overflow-y: auto;
+  line-height: 1.7;
+}
 
-    /* Progress */
-    .progress-wrap {
-      display: none;
-      padding: 0 1.25rem 1rem;
-    }
-    .progress-label {
-      font-size: 11px;
-      color: var(--muted);
-      margin-bottom: 5px;
-      display: flex;
-      justify-content: space-between;
-    }
-    .progress-track {
-      height: 5px;
-      background: var(--offwhite);
-      border-radius: 3px;
-      overflow: hidden;
-      border: 1px solid var(--border);
-    }
-    .progress-fill {
-      height: 100%;
-      background: var(--teal);
-      border-radius: 3px;
-      width: 0;
-      transition: width 0.3s ease;
-    }
-    .progress-log {
-      margin-top: 8px;
-      font-size: 11px;
-      color: var(--muted);
-      font-family: "DM Mono", monospace;
-      max-height: 80px;
-      overflow-y: auto;
-      line-height: 1.7;
-    }
+/* Stats strip */
+.stats-strip {
+  display: none;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  gap: 0;
+}
+.stat-item {
+  flex: 1;
+  text-align: center;
+}
+.stat-item + .stat-item {
+  border-left: 1px solid var(--border);
+}
+.stat-num {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--navy);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.stat-lbl {
+  font-size: 0.6rem;
+  color: var(--muted);
+  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
 
-    /* Stats strip */
-    .stats-strip {
-      display: none;
-      padding: 0.75rem 1.25rem;
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      display: none;
-      gap: 0;
-    }
-    .stat-item {
-      flex: 1;
-      text-align: center;
-    }
-    .stat-item + .stat-item {
-      border-left: 1px solid var(--border);
-    }
-    .stat-num {
-      font-size: 20px;
-      font-weight: 600;
-      color: var(--navy);
-      font-family: "DM Mono", monospace;
-      line-height: 1;
-    }
-    .stat-lbl {
-      font-size: 10px;
-      color: var(--muted);
-      margin-top: 2px;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-    }
+/* Lead list */
+.lead-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem 0;
+}
+.lead-item {
+  padding: 10px 1.25rem;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: all 0.12s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.lead-item:hover { background: var(--offwhite); }
+.lead-item.active {
+  background: #EFF6FF;
+  border-left-color: var(--cyan);
+}
+.lead-rank {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  width: 20px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.lead-score-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+.lead-info { flex: 1; min-width: 0; }
+.lead-name {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lead-meta {
+  font-size: 0.65rem;
+  color: var(--muted);
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lead-opp {
+  font-size: 0.6rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
 
-    /* Lead list */
-    .lead-list {
-      flex: 1;
-      overflow-y: auto;
-      padding: 0.5rem 0;
-    }
-    .lead-item {
-      padding: 10px 1.25rem;
-      cursor: pointer;
-      border-left: 3px solid transparent;
-      transition: all 0.12s;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .lead-item:hover { background: var(--offwhite); }
-    .lead-item.active {
-      background: #EFF6FF;
-      border-left-color: var(--teal);
-    }
-    .lead-rank {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--muted);
-      font-family: "DM Mono", monospace;
-      width: 20px;
-      text-align: right;
-      flex-shrink: 0;
-    }
-    .lead-score-circle {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      font-weight: 600;
-      font-family: "DM Mono", monospace;
-      flex-shrink: 0;
-    }
-    .lead-info { flex: 1; min-width: 0; }
-    .lead-name {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .lead-meta {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 1px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .lead-opp {
-      font-size: 10px;
-      font-weight: 600;
-      padding: 2px 7px;
-      border-radius: 10px;
-      flex-shrink: 0;
-      white-space: nowrap;
-    }
+/* Export bar */
+.export-bar {
+  display: none;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--border);
+  gap: 8px;
+}
+.btn-export {
+  flex: 1;
+  height: 36px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  background: var(--white);
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: var(--font);
+  color: var(--navy);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-export:hover { background: var(--offwhite); border-color: var(--navy); }
+.btn-export.primary {
+  background: var(--cyan);
+  color: var(--navy);
+  border-color: var(--cyan);
+}
+.btn-export.primary:hover { background: var(--cyan2); border-color: var(--cyan2); }
 
-    /* Export btn */
-    .export-bar {
-      display: none;
-      padding: 0.75rem 1.25rem;
-      border-top: 1px solid var(--border);
-      gap: 8px;
-    }
-    .btn-export {
-      flex: 1;
-      height: 36px;
-      border: 1.5px solid var(--border);
-      border-radius: 7px;
-      background: var(--white);
-      font-size: 12px;
-      font-weight: 600;
-      font-family: inherit;
-      color: var(--navy);
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .btn-export:hover { background: var(--offwhite); border-color: var(--navy); }
-    .btn-export.primary {
-      background: var(--teal);
-      color: var(--white);
-      border-color: var(--teal);
-    }
-    .btn-export.primary:hover { background: var(--teal2); border-color: var(--teal2); }
+/* ── Main panel ── */
+.main-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 
-    /* ── Main panel ── */
-    .main-panel {
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
+/* Tab bar */
+.tab-bar {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 1.5rem;
+  height: 44px;
+  gap: 4px;
+}
+.tab-btn {
+  height: 34px;
+  padding: 0 14px;
+  border: none;
+  background: none;
+  font-size: 0.78rem;
+  font-weight: 500;
+  font-family: var(--font);
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tab-btn:hover { color: var(--navy); background: var(--offwhite); }
+.tab-btn.active { color: var(--navy); background: rgba(0,196,217,0.1); }
+.tab-btn .tab-icon { font-size: 0.82rem; }
+.tab-count {
+  font-size: 0.6rem;
+  background: var(--navy);
+  color: var(--white);
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-variant-numeric: tabular-nums;
+}
 
-    /* Tab bar */
-    .tab-bar {
-      background: var(--white);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      padding: 0 1.5rem;
-      height: 44px;
-      gap: 4px;
-    }
-    .tab-btn {
-      height: 34px;
-      padding: 0 14px;
-      border: none;
-      background: none;
-      font-size: 13px;
-      font-weight: 500;
-      font-family: inherit;
-      color: var(--muted);
-      cursor: pointer;
-      border-radius: 6px;
-      transition: all 0.15s;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .tab-btn:hover { color: var(--navy); background: var(--offwhite); }
-    .tab-btn.active { color: var(--navy); background: rgba(0,180,166,0.1); }
-    .tab-btn .tab-icon { font-size: 14px; }
-    .tab-count {
-      font-size: 10px;
-      background: var(--navy);
-      color: var(--white);
-      padding: 1px 6px;
-      border-radius: 8px;
-      font-family: "DM Mono", monospace;
-    }
+/* Map view */
+.map-view {
+  flex: 1;
+  position: relative;
+}
+#map { width: 100%; height: 100%; }
 
-    /* Map view */
-    .map-view {
-      flex: 1;
-      position: relative;
-    }
-    #map {
-      width: 100%;
-      height: 100%;
-    }
+/* Table view */
+.table-view {
+  flex: 1;
+  overflow-y: auto;
+  display: none;
+}
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+.results-table thead {
+  position: sticky;
+  top: 0;
+  background: var(--white);
+  z-index: 10;
+}
+.results-table th {
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.results-table th:hover { color: var(--navy); }
+.results-table th .sort-icon { margin-left: 3px; opacity: 0.4; }
+.results-table th.sorted .sort-icon { opacity: 1; color: var(--cyan); }
+.results-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.results-table tr:hover td { background: var(--offwhite); }
+.results-table tr.row-active td { background: #EFF6FF; }
 
-    /* Table view */
-    .table-view {
-      flex: 1;
-      overflow-y: auto;
-      display: none;
-    }
-    .results-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
-    .results-table thead {
-      position: sticky;
-      top: 0;
-      background: var(--white);
-      z-index: 10;
-    }
-    .results-table th {
-      padding: 10px 14px;
-      text-align: left;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-      border-bottom: 1px solid var(--border);
-      cursor: pointer;
-      user-select: none;
-      white-space: nowrap;
-    }
-    .results-table th:hover { color: var(--navy); }
-    .results-table th .sort-icon { margin-left: 3px; opacity: 0.4; }
-    .results-table th.sorted .sort-icon { opacity: 1; color: var(--teal); }
-    .results-table td {
-      padding: 10px 14px;
-      border-bottom: 1px solid var(--border);
-      vertical-align: middle;
-    }
-    .results-table tr:hover td { background: var(--offwhite); }
-    .results-table tr.row-active td { background: #EFF6FF; }
+.score-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 24px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.mini-bar-wrap { display: flex; align-items: center; gap: 6px; }
+.mini-bar {
+  flex: 1;
+  height: 5px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+  min-width: 50px;
+}
+.mini-bar-fill { height: 100%; border-radius: 3px; }
+.mini-val {
+  font-size: 0.65rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  width: 26px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.stars { color: var(--gold); font-size: 0.72rem; }
+.has-web { color: var(--cyan); font-size: 0.72rem; }
+.no-web  { color: #D1D5DB; font-size: 0.72rem; }
+.opp-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+.action-btn {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  color: var(--navy);
+  cursor: pointer;
+  font-family: var(--font);
+  white-space: nowrap;
+  transition: all 0.12s;
+}
+.action-btn:hover { background: var(--navy); color: var(--white); border-color: var(--navy); }
 
-    .score-pill {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 40px;
-      height: 24px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 600;
-      font-family: "DM Mono", monospace;
-    }
-    .mini-bar-wrap {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .mini-bar {
-      flex: 1;
-      height: 5px;
-      background: var(--border);
-      border-radius: 3px;
-      overflow: hidden;
-      min-width: 50px;
-    }
-    .mini-bar-fill { height: 100%; border-radius: 3px; }
-    .mini-val {
-      font-size: 11px;
-      font-family: "DM Mono", monospace;
-      color: var(--muted);
-      width: 26px;
-      text-align: right;
-      flex-shrink: 0;
-    }
-    .stars { color: var(--gold); font-size: 12px; }
-    .has-web { color: var(--teal); font-size: 12px; }
-    .no-web  { color: #D1D5DB; font-size: 12px; }
-    .opp-badge {
-      font-size: 11px;
-      font-weight: 600;
-      padding: 3px 9px;
-      border-radius: 10px;
-      white-space: nowrap;
-    }
-    .action-btn {
-      font-size: 11px;
-      font-weight: 600;
-      padding: 4px 10px;
-      border-radius: 6px;
-      border: 1.5px solid var(--border);
-      background: var(--white);
-      color: var(--navy);
-      cursor: pointer;
-      font-family: inherit;
-      white-space: nowrap;
-      transition: all 0.12s;
-    }
-    .action-btn:hover { background: var(--navy); color: var(--white); border-color: var(--navy); }
+/* Empty states */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 12px;
+  color: var(--muted);
+  padding: 2rem;
+  text-align: center;
+}
+.empty-icon { font-size: 48px; opacity: 0.4; }
+.empty-title { font-size: 0.95rem; font-weight: 700; color: var(--navy); }
+.empty-sub { font-size: 0.78rem; line-height: 1.6; max-width: 300px; }
 
-    /* Empty / loading states */
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      gap: 12px;
-      color: var(--muted);
-      padding: 2rem;
-      text-align: center;
-    }
-    .empty-icon { font-size: 48px; opacity: 0.4; }
-    .empty-title { font-size: 16px; font-weight: 600; color: var(--navy); }
-    .empty-sub   { font-size: 13px; line-height: 1.6; max-width: 300px; }
+/* Lead gate overlay */
+.lead-gate {
+  padding: 1.25rem;
+  text-align: center;
+  background: linear-gradient(to bottom, rgba(255,255,255,0), var(--white) 20%);
+  position: sticky;
+  bottom: 0;
+}
+.lead-gate h4 {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 0.35rem;
+}
+.lead-gate p {
+  font-size: 0.68rem;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-bottom: 0.75rem;
+}
+.lead-gate .btn-gate {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.25rem;
+  background: var(--cyan);
+  color: var(--navy);
+  font-family: var(--font);
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 6px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+.lead-gate .btn-gate:hover {
+  box-shadow: 0 0 20px rgba(0,196,217,0.4);
+}
+.lead-item.blurred {
+  filter: blur(5px);
+  pointer-events: none;
+  user-select: none;
+}
+.table-row-blurred td {
+  filter: blur(5px);
+  pointer-events: none;
+  user-select: none;
+}
 
-    /* Detail popup on map */
-    .leaflet-popup-content-wrapper {
-      border-radius: 10px !important;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important;
-      padding: 0 !important;
-      overflow: hidden;
-    }
-    .leaflet-popup-content {
-      margin: 0 !important;
-      width: 240px !important;
-    }
-    .popup-inner { padding: 12px 14px; }
-    .popup-name  { font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 4px; }
-    .popup-addr  { font-size: 11px; color: var(--muted); margin-bottom: 8px; line-height: 1.4; }
-    .popup-score-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-    .popup-score-big { font-size: 28px; font-weight: 600; font-family: "DM Mono", monospace; }
-    .popup-issues { font-size: 11px; color: var(--muted); line-height: 1.7; }
+/* Map InfoWindow */
+.gm-style-iw { font-family: var(--font) !important; }
+.gm-style-iw-d { overflow: hidden !important; }
+.popup-inner { padding: 12px 14px; }
+.popup-name  { font-size: 0.78rem; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+.popup-addr  { font-size: 0.65rem; color: var(--muted); margin-bottom: 8px; line-height: 1.4; }
+.popup-score-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.popup-score-big { font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.popup-issues { font-size: 0.65rem; color: var(--muted); line-height: 1.7; }
 
-    /* Spinner */
-    .spinner {
-      width: 15px; height: 15px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.65s linear infinite;
-      flex-shrink: 0;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+/* Spinner */
+.spinner {
+  width: 15px; height: 15px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.65s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 5px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-  </style>
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+@media (max-width: 768px) {
+  .app {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+  .sidebar {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    max-height: 50vh;
+  }
+}
+@media (max-width: 500px) {
+  .nav-links { display: none; }
+}
+</style>
 </head>
 <body>
 
-<!-- ── Top nav ── -->
+<!-- NAV -->
 <nav class="topnav">
   <a class="nav-logo" href="index.html">
     <span class="nav-logo-text">Russell <span>SPC</span></span>
@@ -574,21 +636,21 @@
   <div class="nav-divider"></div>
   <div class="nav-links">
     <a class="nav-link" href="index.html">Home</a>
-    <a class="nav-link" href="score.html">Score Checker</a>
+    <a class="nav-link" href="score.html">SEOrcery</a>
     <a class="nav-link active" href="leads.html">Lead Radar</a>
-    <a class="nav-link" href="rankradar.html">RankRadar</a>
+    <a class="nav-link" href="rankradar.html">Rival Vectors</a>
     <a class="nav-link" href="prompt-sweeper.html">Prompt Sweeper</a>
     <a class="nav-link" href="answerweave.html">AnswerWeave</a>
   </div>
 </nav>
 
-<!-- ── App shell ── -->
+<!-- APP SHELL -->
 <div class="app">
 
-  <!-- ── Sidebar ── -->
+  <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-head">
-      <div class="sidebar-title">📡 Lead Radar</div>
+      <div class="sidebar-title">Lead Radar</div>
       <div class="sidebar-sub">Find businesses with weak SEO. Rank by opportunity. Close the deal.</div>
     </div>
 
@@ -611,19 +673,19 @@
             <option value="accounting firm">Accounting Firm</option>
             <option value="physical therapy">Physical Therapy</option>
             <option value="gym">Gym / Fitness Studio</option>
-            <option value="custom">— Custom —</option>
+            <option value="custom">&mdash; Custom &mdash;</option>
           </select>
         </div>
       </div>
 
       <div class="field" id="custom-field" style="display:none;">
         <label>Custom Industry</label>
-        <input id="custom-industry" type="text" placeholder="e.g. pet groomer" />
+        <input id="custom-industry" type="text" placeholder="e.g. pet groomer">
       </div>
 
       <div class="field">
         <label>City / Market</label>
-        <input id="city" type="text" placeholder="e.g. Boca Raton, FL" />
+        <input id="city" type="text" placeholder="e.g. Boca Raton, FL">
       </div>
 
       <div class="field">
@@ -656,7 +718,7 @@
     <!-- Progress -->
     <div class="progress-wrap" id="progress-wrap">
       <div class="progress-label">
-        <span id="progress-text">Scanning…</span>
+        <span id="progress-text">Scanning&hellip;</span>
         <span id="progress-pct">0%</span>
       </div>
       <div class="progress-track">
@@ -676,34 +738,34 @@
         <div class="stat-lbl">Hot leads</div>
       </div>
       <div class="stat-item">
-        <div class="stat-num" id="stat-avg">—</div>
+        <div class="stat-num" id="stat-avg">&mdash;</div>
         <div class="stat-lbl">Avg score</div>
       </div>
     </div>
 
     <!-- Lead list -->
     <div class="lead-list" id="lead-list">
-      <div style="padding: 2rem 1.25rem; text-align:center; color: var(--muted); font-size:13px;">
+      <div style="padding: 2rem 1.25rem; text-align:center; color: var(--muted); font-size:0.78rem;">
         Run a scan to see leads here
       </div>
     </div>
 
     <!-- Export bar -->
     <div class="export-bar" id="export-bar">
-      <button class="btn-export" onclick="exportCSV()">⬇ CSV</button>
-      <button class="btn-export primary" onclick="exportPitch()">📋 Pitch Report</button>
+      <button class="btn-export" onclick="exportCSV()">CSV</button>
+      <button class="btn-export primary" onclick="exportPitch()">Pitch Report</button>
     </div>
   </aside>
 
-  <!-- ── Main panel ── -->
+  <!-- MAIN PANEL -->
   <main class="main-panel">
     <div class="tab-bar">
       <button class="tab-btn active" id="tab-map" onclick="switchTab('map')">
-        <span class="tab-icon">🗺</span> Map View
+        <span class="tab-icon">Map</span>
         <span class="tab-count" id="map-count">0</span>
       </button>
       <button class="tab-btn" id="tab-table" onclick="switchTab('table')">
-        <span class="tab-icon">📋</span> Table View
+        <span class="tab-icon">Table</span>
         <span class="tab-count" id="table-count">0</span>
       </button>
     </div>
@@ -711,7 +773,7 @@
     <div class="map-view" id="map-view">
       <div id="map"></div>
       <div class="empty-state" id="map-empty">
-        <div class="empty-icon">📡</div>
+        <div class="empty-icon" style="font-size:2rem;opacity:0.3;">RADAR</div>
         <div class="empty-title">Ready to scan</div>
         <div class="empty-sub">Enter an industry and city, then click Scan for Leads. Businesses will appear on the map color-coded by SEO opportunity.</div>
       </div>
@@ -719,7 +781,6 @@
 
     <div class="table-view" id="table-view">
       <div class="empty-state" id="table-empty">
-        <div class="empty-icon">📋</div>
         <div class="empty-title">No results yet</div>
         <div class="empty-sub">Run a scan to populate the table.</div>
       </div>
@@ -727,12 +788,12 @@
         <thead>
           <tr>
             <th style="width:32px;">#</th>
-            <th onclick="sortTable('name')">Business <span class="sort-icon">↕</span></th>
-            <th onclick="sortTable('score')" class="sorted">Score <span class="sort-icon">↑</span></th>
+            <th onclick="sortTable('name')">Business <span class="sort-icon">&updownarrow;</span></th>
+            <th onclick="sortTable('score')" class="sorted">Score <span class="sort-icon">&uparrow;</span></th>
             <th>GBP</th>
             <th>Reviews</th>
             <th>Website</th>
-            <th onclick="sortTable('opportunity')">Opportunity <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('opportunity')">Opportunity <span class="sort-icon">&updownarrow;</span></th>
             <th>Action</th>
           </tr>
         </thead>
@@ -744,27 +805,23 @@
 </div>
 
 <script>
-// ================================================================
-//  ⬇️  Replace with your deployed Cloudflare Worker URL
-// ================================================================
 const WORKER_URL = "https://seorcery-proxy.rruss7997.workers.dev";
 
-// ================================================================
+let allLeads  = [];
+let map       = null;
+let markers   = [];
+let activeIdx = -1;
+let sortCol   = "score";
+let sortAsc   = true;
 
-let allLeads    = [];
-let map         = null;
-let markers     = [];
-let activeIdx   = -1;
-let sortCol     = "score";
-let sortAsc     = true;
-
-// ── Industry select toggle ──────────────────────────────────────
-document.getElementById("industry").addEventListener("change", function() {
+const industrySelect = document.getElementById("industry");
+function syncCustomField() {
   document.getElementById("custom-field").style.display =
-    this.value === "custom" ? "block" : "none";
-});
+    industrySelect.value === "custom" ? "block" : "none";
+}
+industrySelect.addEventListener("change", syncCustomField);
+syncCustomField();
 
-// ── Tab switch ──────────────────────────────────────────────────
 function switchTab(tab) {
   const mapView   = document.getElementById("map-view");
   const tableView = document.getElementById("table-view");
@@ -772,19 +829,21 @@ function switchTab(tab) {
   document.getElementById("tab-table").classList.toggle("active", tab === "table");
   mapView.style.display   = tab === "map"   ? "flex" : "none";
   tableView.style.display = tab === "table" ? "flex" : "none";
-  if (tab === "map" && map) setTimeout(() => map.invalidateSize(), 50);
+  if (tab === "map" && map) google.maps.event.trigger(map, "resize");
 }
-// Init map view visible
 document.getElementById("map-view").style.display = "flex";
 
-// ── Map init ────────────────────────────────────────────────────
+let infoWindow = null;
+
 function initMap(lat, lng) {
-  if (map) { map.remove(); map = null; }
-  map = L.map("map").setView([lat, lng], 13);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "© OpenStreetMap contributors",
-    maxZoom: 19,
-  }).addTo(map);
+  map = new google.maps.Map(document.getElementById("map"), {
+    center: { lat, lng },
+    zoom: 13,
+    mapTypeControl: true,
+    streetViewControl: false,
+    fullscreenControl: false,
+  });
+  infoWindow = new google.maps.InfoWindow();
   document.getElementById("map-empty").style.display = "none";
 }
 
@@ -795,33 +854,43 @@ function scoreColor(score) {
 }
 
 function oppLabel(score) {
-  if (score < 40) return { text: "🔥 Hot",    bg: "#FEE2E2", color: "#991B1B" };
-  if (score < 60) return { text: "⚡ Warm",   bg: "#FEF9C3", color: "#854D0E" };
-  return              { text: "✓ Covered",    bg: "#DCFCE7", color: "#166534" };
+  if (score < 40) return { text: "Hot",    bg: "#FEE2E2", color: "#991B1B" };
+  if (score < 60) return { text: "Warm",   bg: "#FEF9C3", color: "#854D0E" };
+  return              { text: "Covered",   bg: "#DCFCE7", color: "#166534" };
 }
 
 function addMarker(lead, idx) {
   if (!lead.lat || !lead.lng) return;
-  const col   = scoreColor(lead.score);
-  const opp   = oppLabel(lead.score);
-  const icon  = L.divIcon({
-    className: "",
-    html: `<div style="
-      width:38px;height:38px;border-radius:50%;
-      background:${col};border:3px solid white;
-      box-shadow:0 2px 8px rgba(0,0,0,0.25);
-      display:flex;align-items:center;justify-content:center;
-      font-size:11px;font-weight:700;color:white;
-      font-family:'DM Mono',monospace;cursor:pointer;
-      transition:transform 0.15s;
-    ">${lead.score}</div>`,
-    iconSize:   [38, 38],
-    iconAnchor: [19, 19],
-    popupAnchor:[0, -22],
+  const col  = scoreColor(lead.score);
+  const opp  = oppLabel(lead.score);
+
+  const marker = new google.maps.marker.AdvancedMarkerElement
+    ? null : null; // fallback below
+
+  const markerDiv = document.createElement("div");
+  markerDiv.style.cssText = `
+    width:38px;height:38px;border-radius:50%;
+    background:${col};border:3px solid white;
+    box-shadow:0 2px 8px rgba(0,0,0,0.25);
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:700;color:white;
+    font-family:'Inter',sans-serif;cursor:pointer;
+  `;
+  markerDiv.textContent = lead.score;
+
+  const m = new google.maps.Marker({
+    position: { lat: lead.lat, lng: lead.lng },
+    map: map,
+    icon: {
+      url: `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38"><circle cx="19" cy="19" r="17" fill="${col}" stroke="white" stroke-width="3"/><text x="19" y="23" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="white">${lead.score}</text></svg>`)}`,
+      scaledSize: new google.maps.Size(38, 38),
+      anchor: new google.maps.Point(19, 19),
+    },
+    title: lead.name,
   });
 
   const issues = buildIssues(lead);
-  const popup  = L.popup({ maxWidth: 260 }).setContent(`
+  const content = `
     <div class="popup-inner">
       <div class="popup-name">${esc(lead.name)}</div>
       <div class="popup-addr">${esc(lead.address || "")}</div>
@@ -829,12 +898,15 @@ function addMarker(lead, idx) {
         <div class="popup-score-big" style="color:${col};">${lead.score}</div>
         <span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:10px;background:${opp.bg};color:${opp.color};">${opp.text}</span>
       </div>
-      <div class="popup-issues">${issues.map(i => `• ${i}`).join("<br>")}</div>
+      <div class="popup-issues">${issues.map(i => "\u2022 " + i).join("<br>")}</div>
     </div>
-  `);
+  `;
 
-  const m = L.marker([lead.lat, lead.lng], { icon }).addTo(map).bindPopup(popup);
-  m.on("click", () => selectLead(idx));
+  m.addListener("click", () => {
+    infoWindow.setContent(content);
+    infoWindow.open(map, m);
+    selectLead(idx);
+  });
   markers.push(m);
 }
 
@@ -845,13 +917,11 @@ function buildIssues(lead) {
   if (lead.reviews < 40)             issues.push("Few reviews (" + (lead.reviewCount||0) + ")");
   if (!lead.hasWebsite)              issues.push("No website linked");
   if (lead.gbp >= 75 && lead.reviews >= 60 && lead.hasWebsite)
-                                     issues.push("Strong profile — minor gains available");
+                                     issues.push("Strong profile \u2014 minor gains available");
   return issues.length ? issues : ["Profile looks complete"];
 }
 
-// ── Score a single business from Places data ────────────────────
 function scoreBusiness(place) {
-  // Tighter scoring — mirrors the worker's scoring logic
   const photoCount = place.photos?.length || 0;
   let gbp = 10;
   if (place.rating)               gbp += 8;
@@ -896,40 +966,34 @@ function scoreBusiness(place) {
   const score = Math.round((gbp + reviews + cit) / 3);
 
   return {
-    name:         place.name,
-    address:      place.formatted_address || "",
-    lat:          place.lat,
-    lng:          place.lng,
-    placeId:      place.place_id,
-    rating:       rating,
-    reviewCount:  count,
-    hasWebsite:   !!place.website,
-    website:      place.website || null,
-    gbp,
-    reviews,
-    citations:    cit,
-    score,
-    placesFound:  true,
+    name:        place.name,
+    address:     place.formatted_address || "",
+    lat:         place.lat,
+    lng:         place.lng,
+    placeId:     place.place_id,
+    rating:      rating,
+    reviewCount: count,
+    hasWebsite:  !!place.website,
+    website:     place.website || null,
+    gbp, reviews, citations: cit, score, placesFound: true,
   };
 }
 
-// ── Main scan ───────────────────────────────────────────────────
 async function startScan() {
   const industryEl = document.getElementById("industry");
   const industry   = industryEl.value === "custom"
     ? document.getElementById("custom-industry").value.trim()
     : industryEl.value;
-  const city       = document.getElementById("city").value.trim();
-  const limit      = parseInt(document.getElementById("limit").value);
+  const city  = document.getElementById("city").value.trim();
+  const limit = parseInt(document.getElementById("limit").value);
 
   if (!industry) { alert("Please select or enter an industry."); return; }
   if (!city)     { alert("Please enter a city / market."); return; }
 
   const btn = document.getElementById("scan-btn");
   btn.disabled = true;
-  btn.innerHTML = `<span class="spinner"></span> Scanning…`;
+  btn.innerHTML = `<span class="spinner"></span> Scanning\u2026`;
 
-  // Reset
   allLeads = [];
   markers.forEach(m => m.remove && m.remove());
   markers = [];
@@ -940,18 +1004,12 @@ async function startScan() {
   document.getElementById("stats-strip").style.display   = "none";
   document.getElementById("export-bar").style.display    = "none";
 
-  setProgress(0, `Looking up ${industry}s in ${city}…`);
+  setProgress(0, `Looking up ${industry}s in ${city}\u2026`);
   document.getElementById("progress-wrap").style.display = "block";
 
   try {
-    // Step 1: fetch nearby businesses from worker
-    const params = new URLSearchParams({
-      action:   "radar",
-      industry,
-      city,
-      limit,
-    });
-    const res  = await fetch(`${WORKER_URL}?${params}`);
+    const params = new URLSearchParams({ action: "radar", industry, city, limit });
+    const res = await fetch(`${WORKER_URL}?${params}`);
     if (!res.ok) throw new Error(`Worker returned ${res.status}`);
     const data = await res.json();
     if (data.error) throw new Error(data.error);
@@ -964,49 +1022,43 @@ async function startScan() {
       return;
     }
 
-    // Step 2: score each and build lead list
     const center = data.center;
     initMap(center.lat, center.lng);
 
     for (let i = 0; i < places.length; i++) {
-      const p    = places[i];
-      const lead = scoreBusiness(p);
+      const lead = scoreBusiness(places[i]);
       allLeads.push(lead);
       setProgress(
         Math.round(((i + 1) / places.length) * 100),
         `Scored: ${lead.name}`
       );
-      await sleep(20); // let UI breathe
+      await sleep(20);
     }
 
-    // Step 3: sort
     sortLeads();
-
-    // Step 4: render
     renderLeadList();
     renderTable();
     renderMapMarkers();
     renderStats();
 
-    document.getElementById("stats-strip").style.display = "flex";
-    document.getElementById("export-bar").style.display  = "flex";
-    document.getElementById("progress-wrap").style.display = "none";
+    document.getElementById("stats-strip").style.display    = "flex";
+    document.getElementById("export-bar").style.display     = "flex";
+    document.getElementById("progress-wrap").style.display  = "none";
 
   } catch (err) {
     logProgress("Error: " + err.message);
-    alert("Scan failed.\n\nMake sure WORKER_URL is set correctly.\n\n" + err.message);
+    alert("Scan failed.\n\n" + err.message);
   }
 
   btn.innerHTML = "Scan Again";
   btn.disabled  = false;
 }
 
-// ── Sort ────────────────────────────────────────────────────────
 function sortLeads() {
   const by = document.getElementById("sort-by").value;
   allLeads.sort((a, b) => {
     if (by === "opportunity" || by === "score") return a.score - b.score;
-    if (by === "reviews")  return a.reviewCount - b.reviewCount;
+    if (by === "reviews") return a.reviewCount - b.reviewCount;
     return a.score - b.score;
   });
 }
@@ -1015,18 +1067,18 @@ function sortTable(col) {
   if (sortCol === col) sortAsc = !sortAsc;
   else { sortCol = col; sortAsc = true; }
   document.querySelectorAll(".results-table th").forEach(th => th.classList.remove("sorted"));
-  const sorted = [...allLeads].sort((a, b) => {
+  allLeads.sort((a, b) => {
     let av = a[col] ?? 0, bv = b[col] ?? 0;
     if (typeof av === "string") av = av.toLowerCase();
     if (typeof bv === "string") bv = bv.toLowerCase();
     return sortAsc ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
   });
-  allLeads = sorted;
   renderTable();
   renderLeadList();
 }
 
-// ── Render lead list (sidebar) ───────────────────────────────────
+const FREE_LEADS = 3;
+
 function renderLeadList() {
   const el = document.getElementById("lead-list");
   el.innerHTML = "";
@@ -1034,25 +1086,37 @@ function renderLeadList() {
     const col  = scoreColor(lead.score);
     const opp  = oppLabel(lead.score);
     const item = document.createElement("div");
-    item.className = "lead-item";
+    item.className = "lead-item" + (i >= FREE_LEADS ? " blurred" : "");
     item.dataset.idx = i;
     item.innerHTML = `
       <span class="lead-rank">${i + 1}</span>
       <div class="lead-score-circle" style="background:${col}20;color:${col};">${lead.score}</div>
       <div class="lead-info">
         <div class="lead-name">${esc(lead.name)}</div>
-        <div class="lead-meta">${lead.reviewCount} reviews · ${lead.rating || "—"}★${lead.hasWebsite ? " · has site" : " · no website"}</div>
+        <div class="lead-meta">${lead.reviewCount} reviews \u00b7 ${lead.rating || "\u2014"}\u2605${lead.hasWebsite ? " \u00b7 has site" : " \u00b7 no website"}</div>
       </div>
       <span class="lead-opp" style="background:${opp.bg};color:${opp.color};">${opp.text}</span>
     `;
-    item.addEventListener("click", () => selectLead(i));
+    if (i < FREE_LEADS) item.addEventListener("click", () => selectLead(i));
     el.appendChild(item);
   });
+
+  // Add gate overlay if there are locked leads
+  if (allLeads.length > FREE_LEADS) {
+    const gate = document.createElement("div");
+    gate.className = "lead-gate";
+    gate.innerHTML = `
+      <h4>${allLeads.length - FREE_LEADS} more leads found</h4>
+      <p>Unlock the full list with scores, map pins, and export.</p>
+      <a href="index.html#contact" class="btn-gate">Unlock All Leads &rarr;</a>
+    `;
+    el.appendChild(gate);
+  }
+
   document.getElementById("map-count").textContent   = allLeads.length;
   document.getElementById("table-count").textContent = allLeads.length;
 }
 
-// ── Render table ─────────────────────────────────────────────────
 function renderTable() {
   const tbody = document.getElementById("table-body");
   tbody.innerHTML = "";
@@ -1060,15 +1124,15 @@ function renderTable() {
   document.getElementById("table-empty").style.display   = "none";
 
   allLeads.forEach((lead, i) => {
-    const col   = scoreColor(lead.score);
-    const opp   = oppLabel(lead.score);
-    const tr    = document.createElement("tr");
+    const col = scoreColor(lead.score);
+    const opp = oppLabel(lead.score);
+    const tr  = document.createElement("tr");
     tr.dataset.idx = i;
     tr.innerHTML = `
-      <td style="color:var(--muted);font-size:11px;font-family:'DM Mono',monospace;">${i+1}</td>
+      <td style="color:var(--muted);font-size:0.65rem;font-variant-numeric:tabular-nums;">${i+1}</td>
       <td>
-        <div style="font-weight:500;font-size:13px;">${esc(lead.name)}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:1px;">${esc(lead.address)}</div>
+        <div style="font-weight:500;font-size:0.78rem;">${esc(lead.name)}</div>
+        <div style="font-size:0.65rem;color:var(--muted);margin-top:1px;">${esc(lead.address)}</div>
       </td>
       <td>
         <span class="score-pill" style="background:${col}20;color:${col};">${lead.score}</span>
@@ -1080,13 +1144,13 @@ function renderTable() {
         </div>
       </td>
       <td>
-        <span class="stars">${"★".repeat(Math.round(lead.rating || 0))}</span>
-        <span style="font-size:11px;color:var(--muted);margin-left:3px;">${lead.reviewCount}</span>
+        <span class="stars">${"\u2605".repeat(Math.round(lead.rating || 0))}</span>
+        <span style="font-size:0.65rem;color:var(--muted);margin-left:3px;">${lead.reviewCount}</span>
       </td>
       <td>
         ${lead.hasWebsite
-          ? `<span class="has-web" title="${esc(lead.website||'')}">✓</span>`
-          : `<span class="no-web">✗</span>`}
+          ? `<span class="has-web" title="${esc(lead.website||'')}">\u2713</span>`
+          : `<span class="no-web">\u2717</span>`}
       </td>
       <td>
         <span class="opp-badge" style="background:${opp.bg};color:${opp.color};">${opp.text}</span>
@@ -1095,25 +1159,31 @@ function renderTable() {
         <button class="action-btn" onclick="pitchLead(${i})">Pitch</button>
       </td>
     `;
-    tr.addEventListener("click", (e) => {
-      if (e.target.tagName !== "BUTTON") selectLead(i);
-    });
+    if (i >= FREE_LEADS) {
+      tr.classList.add("table-row-blurred");
+    } else {
+      tr.addEventListener("click", (e) => {
+        if (e.target.tagName !== "BUTTON") selectLead(i);
+      });
+    }
     tbody.appendChild(tr);
   });
 }
 
-// ── Render map markers ───────────────────────────────────────────
 function renderMapMarkers() {
-  allLeads.forEach((lead, i) => addMarker(lead, i));
-  if (allLeads.length > 0) {
-    const bounds = allLeads
-      .filter(l => l.lat && l.lng)
-      .map(l => [l.lat, l.lng]);
-    if (bounds.length > 1) map.fitBounds(bounds, { padding: [40, 40] });
+  markers.forEach(m => m.setMap(null));
+  markers = [];
+  allLeads.forEach((lead, i) => {
+    if (i < FREE_LEADS) addMarker(lead, i);
+  });
+  const visibleLeads = allLeads.slice(0, FREE_LEADS).filter(l => l.lat && l.lng);
+  if (visibleLeads.length > 1) {
+    const bounds = new google.maps.LatLngBounds();
+    visibleLeads.forEach(l => bounds.extend({ lat: l.lat, lng: l.lng }));
+    map.fitBounds(bounds, { padding: 40 });
   }
 }
 
-// ── Stats ────────────────────────────────────────────────────────
 function renderStats() {
   const hot = allLeads.filter(l => l.score < 40).length;
   const avg = allLeads.length
@@ -1124,27 +1194,23 @@ function renderStats() {
   document.getElementById("stat-avg").textContent   = avg;
 }
 
-// ── Select a lead ────────────────────────────────────────────────
 function selectLead(idx) {
   activeIdx = idx;
-  // Sidebar highlight
   document.querySelectorAll(".lead-item").forEach((el, i) => {
     el.classList.toggle("active", i === idx);
   });
-  // Table highlight
   document.querySelectorAll("#table-body tr").forEach((tr, i) => {
     tr.classList.toggle("row-active", i === idx);
   });
-  // Map
   const lead = allLeads[idx];
   if (lead && lead.lat && markers[idx]) {
-    map.setView([lead.lat, lead.lng], 15);
-    markers[idx].openPopup();
+    map.setCenter({ lat: lead.lat, lng: lead.lng });
+    map.setZoom(15);
+    google.maps.event.trigger(markers[idx], "click");
     switchTab("map");
   }
 }
 
-// ── Pitch single lead ────────────────────────────────────────────
 function pitchLead(idx) {
   const lead   = allLeads[idx];
   const issues = buildIssues(lead);
@@ -1153,30 +1219,28 @@ function pitchLead(idx) {
     `Address: ${lead.address}`,
     `SEO Score: ${lead.score}/100`,
     `Issues: ${issues.join("; ")}`,
-    `Reviews: ${lead.reviewCount} (${lead.rating}★)`,
+    `Reviews: ${lead.reviewCount} (${lead.rating}\u2605)`,
     `Website: ${lead.hasWebsite ? lead.website : "None"}`,
   ].join("\n");
   navigator.clipboard?.writeText(text);
   alert("Lead info copied to clipboard!\n\n" + text);
 }
 
-// ── CSV export ───────────────────────────────────────────────────
 function exportCSV() {
+  alert("Export is available in the full version.\n\nContact Russell SPC to get started.");
+  return;
+  // Full version below —
   const headers = ["Rank","Name","Address","Score","GBP","Reviews","Review Count","Rating","Has Website","Website","Opportunity"];
   const rows = allLeads.map((l, i) => [
     i + 1,
     `"${(l.name||"").replace(/"/g,'""')}"`,
     `"${(l.address||"").replace(/"/g,'""')}"`,
-    l.score,
-    l.gbp,
-    l.reviews,
-    l.reviewCount,
-    l.rating,
+    l.score, l.gbp, l.reviews, l.reviewCount, l.rating,
     l.hasWebsite ? "Yes" : "No",
     `"${(l.website||"").replace(/"/g,'""')}"`,
-    oppLabel(l.score).text.replace(/[^\w\s]/g, "").trim(),
+    oppLabel(l.score).text,
   ]);
-  const csv = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+  const csv  = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
   const blob = new Blob([csv], { type: "text/csv" });
   const a    = document.createElement("a");
   a.href     = URL.createObjectURL(blob);
@@ -1184,15 +1248,17 @@ function exportCSV() {
   a.click();
 }
 
-// ── Pitch report (plain text) ─────────────────────────────────────
 function exportPitch() {
-  const city   = document.getElementById("city").value.trim();
-  const ind    = document.getElementById("industry").value;
-  const hot    = allLeads.filter(l => l.score < 40);
-  const warm   = allLeads.filter(l => l.score >= 40 && l.score < 60);
+  alert("Export is available in the full version.\n\nContact Russell SPC to get started.");
+  return;
+  // Full version below —
+  const city = document.getElementById("city").value.trim();
+  const ind  = document.getElementById("industry").value;
+  const hot  = allLeads.filter(l => l.score < 40);
+  const warm = allLeads.filter(l => l.score >= 40 && l.score < 60);
 
-  let txt = `SEOrcery — Lead Radar Report\n`;
-  txt += `Market: ${city} · Industry: ${ind}\n`;
+  let txt = `SEOrcery \u2014 Lead Radar Report\n`;
+  txt += `Market: ${city} \u00b7 Industry: ${ind}\n`;
   txt += `Generated: ${new Date().toLocaleDateString()}\n`;
   txt += `${"─".repeat(50)}\n\n`;
   txt += `SUMMARY\n`;
@@ -1201,9 +1267,9 @@ function exportPitch() {
   txt += `Warm leads (score 40-60): ${warm.length}\n\n`;
   txt += `TOP 10 OPPORTUNITIES\n${"─".repeat(50)}\n`;
   allLeads.slice(0, 10).forEach((l, i) => {
-    txt += `\n${i+1}. ${l.name} — Score: ${l.score}/100\n`;
+    txt += `\n${i+1}. ${l.name} \u2014 Score: ${l.score}/100\n`;
     txt += `   ${l.address}\n`;
-    txt += `   ${l.reviewCount} reviews · ${l.rating}★ · Website: ${l.hasWebsite ? "Yes" : "No"}\n`;
+    txt += `   ${l.reviewCount} reviews \u00b7 ${l.rating}\u2605 \u00b7 Website: ${l.hasWebsite ? "Yes" : "No"}\n`;
     txt += `   Issues: ${buildIssues(l).join("; ")}\n`;
   });
 
@@ -1214,7 +1280,6 @@ function exportPitch() {
   a.click();
 }
 
-// ── Progress helpers ─────────────────────────────────────────────
 function setProgress(pct, msg) {
   document.getElementById("progress-fill").style.width = pct + "%";
   document.getElementById("progress-pct").textContent  = pct + "%";
@@ -1227,7 +1292,6 @@ function logProgress(msg) {
   document.getElementById("progress-text").textContent = msg;
 }
 
-// ── Utilities ────────────────────────────────────────────────────
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 function esc(str) {
   return String(str||"")
