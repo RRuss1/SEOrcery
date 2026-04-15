@@ -39,9 +39,21 @@
 
 body {
   font-family: var(--font);
-  background: var(--offwhite);
+  background: #FAF7F0;
   color: var(--text);
   min-height: 100vh;
+}
+.app-wrapper {
+  max-width: 1400px;
+  margin: 1.5rem auto;
+  padding: 0 1.5rem;
+}
+.app-card {
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 2px 24px rgba(11,31,58,0.08), 0 1px 4px rgba(11,31,58,0.04);
+  overflow: hidden;
+  border: 1px solid rgba(11,31,58,0.1);
 }
 
 /* ── Top nav ── */
@@ -114,7 +126,7 @@ body {
 .app {
   display: grid;
   grid-template-columns: var(--sidebar) 1fr;
-  height: calc(100vh - 52px);
+  height: calc(100vh - 52px - 3rem);
   overflow: hidden;
 }
 
@@ -643,6 +655,8 @@ body {
 </nav>
 
 <!-- APP SHELL -->
+<div class="app-wrapper">
+<div class="app-card">
 <div class="app">
 
   <!-- SIDEBAR -->
@@ -800,6 +814,8 @@ body {
     </div>
   </main>
 
+</div>
+</div>
 </div>
 
 <script>
