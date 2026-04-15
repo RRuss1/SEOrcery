@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RankRadar — Russell SPC</title>
+<meta name="description" content="Try RankRadar — AI-powered competitive intelligence for marketing agencies. Discover competitors, analyze channels, and get a climb strategy. Built by Russell SPC.">
+<link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --linen: #FAF7F0;
+  --navy: #0B1F3A;
+  --navy-mid: #0F2A4E;
+  --gun: #1E1E1E;
+  --gun-light: #444444;
+  --cyan: #00C4D9;
+  --cyan-dim: rgba(0,196,217,0.15);
+  --white: #ffffff;
+  --border: #E5E7EB;
+  --border-navy: rgba(11,31,58,0.12);
+  --muted: #6B7280;
+  --text: #1E1E1E;
+  --font: 'Inter', sans-serif;
+  --green: #16A34A;
+  --green-bg: #DCFCE7;
+  --yellow: #CA8A04;
+  --yellow-bg: #FEF9C3;
+  --red: #DC2626;
+  --red-bg: #FEE2E2;
+  --blue: #2563EB;
+  --blue-bg: #DBEAFE;
+  --purple: #7C3AED;
+  --purple-bg: #EDE9FE;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 17px; }
+body {
+  font-family: var(--font);
+  background: var(--linen);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--text);
+}
+
+/* ── Top Nav ── */
+.demo-nav {
+  width: 100%;
+  background: var(--navy);
+  padding: 0.9rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+}
+.demo-nav-left { display: flex; align-items: center; gap: 1.25rem; }
+.demo-nav-logo {
+  font-family: var(--font);
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--white);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+}
+.demo-nav-logo span { color: var(--cyan); }
+.demo-nav-divider { width: 1px; height: 18px; background: rgba(255,255,255,0.15); }
+.nav-links { display: flex; gap: 4px; }
+.nav-link {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.5);
+  text-decoration: none;
+  padding: 0.35rem 0.75rem;
+  border-radius: 4px;
+  transition: color 0.2s, background 0.2s;
+}
+.nav-link:hover { color: var(--white); background: rgba(255,255,255,0.08); }
+.nav-link.active { color: var(--cyan); background: rgba(0,196,217,0.1); }
+.demo-nav-right { display: flex; align-items: center; gap: 1rem; }
+.demo-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  border: 1px solid rgba(0,196,217,0.3);
+  padding: 0.2rem 0.6rem;
+  border-radius: 3px;
+}
+
+/* ── Main container ── */
+.main { width: 100%; max-width: 1100px; padding: 2.5rem 2rem 4rem; }
+
+/* ── Hero header ── */
+.demo-hero {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+.demo-hero h1 {
+  font-family: var(--font);
+  font-weight: 800;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  color: var(--navy);
+  letter-spacing: -0.03em;
+  margin-bottom: 0.5rem;
+}
+.demo-hero h1 span { color: var(--cyan); }
+.demo-hero p {
+  font-size: 0.95rem;
+  font-weight: 300;
+  color: var(--gun-light);
+  max-width: 560px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+/* ── Input Card ── */
+.input-card {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 2.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 24px rgba(11,31,58,0.06);
+}
+.input-card h2 {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--navy);
+  margin-bottom: 0.35rem;
+}
+.input-card .subtitle {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-bottom: 1.75rem;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+.form-group { display: flex; flex-direction: column; }
+.form-group.full { grid-column: 1 / -1; }
+.form-group label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gun-light);
+  margin-bottom: 0.4rem;
+}
+.form-group input, .form-group select {
+  padding: 0.75rem 1rem;
+  background: var(--linen);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: var(--font);
+  font-size: 0.88rem;
+  color: var(--gun);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-group input:focus, .form-group select:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 3px rgba(0,196,217,0.12);
+}
+.form-group input::placeholder { color: #B0B0B0; }
+.btn-analyze {
+  grid-column: 1 / -1;
+  margin-top: 0.5rem;
+  padding: 0.9rem 2rem;
+  background: var(--cyan);
+  color: var(--navy);
+  font-family: var(--font);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 0 20px rgba(0,229,255,0.25);
+  transition: box-shadow 0.25s, transform 0.2s;
+}
+.btn-analyze:hover { box-shadow: 0 0 36px rgba(0,229,255,0.55); transform: translateY(-1px); }
+.btn-analyze:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* ── Loading State ── */
+.loading-section {
+  display: none;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 3rem 2.5rem;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+.loading-section.active { display: block; }
+.loading-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--navy);
+  margin-bottom: 2rem;
+}
+.loading-steps { display: flex; flex-direction: column; gap: 1rem; max-width: 360px; margin: 0 auto; }
+.loading-step {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  transition: color 0.3s;
+}
+.loading-step.active { color: var(--navy); font-weight: 600; }
+.loading-step.done { color: var(--green); }
+.step-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--linen);
+  border: 1.5px solid var(--border);
+  transition: all 0.3s;
+}
+.loading-step.active .step-icon {
+  border-color: var(--cyan);
+  background: var(--cyan-dim);
+}
+.loading-step.done .step-icon {
+  border-color: var(--green);
+  background: var(--green-bg);
+}
+.step-spinner {
+  width: 12px; height: 12px;
+  border: 2px solid var(--cyan-dim);
+  border-top-color: var(--cyan);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: none;
+}
+.loading-step.active .step-spinner { display: block; }
+.step-check { display: none; font-size: 0.7rem; color: var(--green); }
+.loading-step.done .step-check { display: block; }
+.loading-step.done .step-spinner { display: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Error State ── */
+.error-msg {
+  display: none;
+  background: var(--red-bg);
+  border: 1px solid #FECACA;
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 2rem;
+  font-size: 0.85rem;
+  color: var(--red);
+}
+.error-msg.active { display: block; }
+
+/* ── Results ── */
+.results { display: none; }
+.results.active { display: block; }
+
+.result-section {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 2.25rem;
+  margin-bottom: 1.5rem;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.result-section.visible { opacity: 1; transform: translateY(0); }
+
+.section-badge {
+  display: inline-block;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.65rem;
+  border-radius: 3px;
+  margin-bottom: 0.75rem;
+}
+.badge-discovery { background: var(--cyan-dim); color: var(--cyan); }
+.badge-channels { background: var(--purple-bg); color: var(--purple); }
+.badge-ranking { background: var(--yellow-bg); color: var(--yellow); }
+.badge-strategy { background: var(--green-bg); color: var(--green); }
+
+.section-title {
+  font-weight: 800;
+  font-size: 1.3rem;
+  color: var(--navy);
+  letter-spacing: -0.02em;
+  margin-bottom: 0.35rem;
+}
+.section-subtitle {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+/* ── Market Summary ── */
+.market-summary {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: var(--white);
+  text-align: center;
+  padding: 2.5rem;
+}
+.market-summary .section-badge { background: rgba(0,196,217,0.15); color: var(--cyan); }
+.market-summary .section-title { color: var(--white); }
+.market-summary .section-subtitle { color: rgba(255,255,255,0.55); }
+.market-summary .biz-name { color: var(--cyan); font-weight: 700; }
+
+/* ── Competitor Cards ── */
+.competitor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+.comp-card {
+  background: var(--linen);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.comp-card:hover {
+  border-color: var(--cyan);
+  box-shadow: 0 4px 20px rgba(0,196,217,0.1);
+}
+.comp-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; }
+.comp-name { font-weight: 700; font-size: 1rem; color: var(--navy); }
+.comp-website { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+.comp-threat {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+.threat-high { background: var(--red-bg); color: var(--red); }
+.threat-medium { background: var(--yellow-bg); color: var(--yellow); }
+.threat-low { background: var(--green-bg); color: var(--green); }
+.comp-category {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.75rem;
+}
+.comp-strengths {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+.comp-strengths span {
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.15rem 0.5rem;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--gun-light);
+}
+.comp-how {
+  font-size: 0.8rem;
+  color: var(--gun-light);
+  line-height: 1.65;
+  border-top: 1px solid var(--border);
+  padding-top: 0.75rem;
+}
+
+/* ── Channel Comparison Table ── */
+.channel-table-wrap { overflow-x: auto; margin: 0 -0.5rem; }
+.channel-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  min-width: 650px;
+}
+.channel-table th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0.75rem 0.6rem;
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+}
+.channel-table td {
+  padding: 0.65rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.channel-table tr.client-row { background: rgba(0,196,217,0.05); font-weight: 600; }
+.channel-table tr.client-row td:first-child { color: var(--cyan); }
+.channel-table .biz-cell { font-weight: 600; color: var(--navy); white-space: nowrap; }
+.score-cell { text-align: center; }
+.score-pip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 24px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.72rem;
+}
+.score-high { background: var(--green-bg); color: var(--green); }
+.score-mid { background: var(--yellow-bg); color: var(--yellow); }
+.score-low { background: var(--red-bg); color: var(--red); }
+
+/* ── Ranking Section ── */
+.ranking-header {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+.rank-score-big {
+  text-align: center;
+}
+.rank-score-num {
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: var(--navy);
+  line-height: 1;
+}
+.rank-score-label {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 0.25rem;
+}
+.rank-position-badge {
+  display: inline-block;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+.pos-leader { background: var(--green-bg); color: var(--green); }
+.pos-challenger { background: var(--blue-bg); color: var(--blue); }
+.pos-contender { background: var(--yellow-bg); color: var(--yellow); }
+.pos-undiscovered { background: var(--red-bg); color: var(--red); }
+
+.standings-bars { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 2rem; }
+.standing-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.standing-name {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--navy);
+  min-width: 140px;
+  text-align: right;
+}
+.standing-name.is-client { color: var(--cyan); }
+.standing-bar-track {
+  flex: 1;
+  height: 24px;
+  background: var(--linen);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+.standing-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--navy);
+  transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+}
+.standing-bar-fill.is-client { background: var(--cyan); }
+.standing-score {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--navy);
+  min-width: 32px;
+}
+
+/* Top Gaps */
+.gaps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.gap-card {
+  background: var(--linen);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.25rem;
+  border-left: 3px solid var(--red);
+}
+.gap-channel { font-weight: 700; font-size: 0.88rem; color: var(--navy); margin-bottom: 0.25rem; }
+.gap-vs { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.5rem; }
+.gap-detail { font-size: 0.78rem; color: var(--gun-light); line-height: 1.6; }
+.gap-score-diff {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--red);
+  background: var(--red-bg);
+  padding: 0.1rem 0.45rem;
+  border-radius: 3px;
+  margin-left: 0.35rem;
+}
+
+/* ── Climb Strategy ── */
+.climb-tier { margin-bottom: 1.75rem; }
+.climb-tier:last-child { margin-bottom: 0; }
+.tier-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+.tier-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.tier-immediate .tier-icon { background: var(--green-bg); color: var(--green); }
+.tier-short .tier-icon { background: var(--yellow-bg); color: var(--yellow); }
+.tier-long .tier-icon { background: var(--purple-bg); color: var(--purple); }
+.tier-label { font-weight: 700; font-size: 0.95rem; color: var(--navy); }
+.tier-timeline { font-size: 0.72rem; color: var(--muted); margin-left: 0.25rem; }
+
+.rec-cards { display: flex; flex-direction: column; gap: 0.75rem; }
+.rec-card {
+  background: var(--linen);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.25rem;
+  transition: border-color 0.2s;
+}
+.rec-card:hover { border-color: var(--cyan); }
+.rec-action { font-weight: 600; font-size: 0.88rem; color: var(--navy); margin-bottom: 0.35rem; }
+.rec-why { font-size: 0.78rem; color: var(--gun-light); line-height: 1.6; margin-bottom: 0.75rem; }
+.rec-meta { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+.rec-tag {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 0.15rem 0.5rem;
+  border-radius: 3px;
+}
+.effort-low { background: var(--green-bg); color: var(--green); }
+.effort-medium { background: var(--yellow-bg); color: var(--yellow); }
+.effort-high { background: var(--red-bg); color: var(--red); }
+.impact-low { background: #F3F4F6; color: var(--muted); }
+.impact-medium { background: var(--blue-bg); color: var(--blue); }
+.impact-high { background: var(--green-bg); color: var(--green); }
+.rec-outpaces { font-size: 0.68rem; color: var(--muted); font-style: italic; }
+
+/* ── New Analysis Button ── */
+.new-analysis-wrap { text-align: center; margin-top: 1rem; margin-bottom: 2rem; }
+.btn-new {
+  padding: 0.75rem 2rem;
+  background: var(--navy);
+  color: var(--white);
+  font-family: var(--font);
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-new:hover { background: var(--navy-mid); }
+
+/* ── Footer ── */
+.demo-footer {
+  width: 100%;
+  background: var(--gun);
+  padding: 2rem;
+  text-align: center;
+  margin-top: auto;
+}
+.demo-footer-logo {
+  font-family: var(--font);
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: var(--white);
+  text-decoration: none;
+}
+.demo-footer-logo span { color: var(--cyan); }
+.demo-footer p {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.3);
+  margin-top: 0.35rem;
+}
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .demo-nav { padding: 0.75rem 1rem; flex-wrap: wrap; gap: 0.5rem; }
+  .demo-nav-right { display: none; }
+  .main { padding: 1.5rem 1rem 3rem; }
+  .input-card { padding: 1.5rem; }
+  .form-grid { grid-template-columns: 1fr; }
+  .result-section { padding: 1.5rem; }
+  .competitor-grid { grid-template-columns: 1fr; }
+  .gaps-grid { grid-template-columns: 1fr; }
+  .ranking-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+  .standing-name { min-width: 90px; font-size: 0.7rem; }
+}
+@media (max-width: 500px) {
+  .nav-links { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="topnav" style="position:sticky;top:0;z-index:100;display:flex;align-items:center;padding:0.9rem 2rem;background:var(--navy);gap:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.25);">
+  <a href="index.html" style="text-decoration:none;font-weight:800;font-size:1rem;color:#fff;letter-spacing:-0.02em;">Russell <span style="color:var(--cyan);">SPC</span></a>
+  <div style="width:1px;height:20px;background:rgba(255,255,255,0.15);"></div>
+  <div style="display:flex;gap:4px;">
+    <a href="index.html" style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.55);text-decoration:none;padding:5px 12px;border-radius:6px;">Home</a>
+    <a href="score.html" style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.55);text-decoration:none;padding:5px 12px;border-radius:6px;">Score Checker</a>
+    <a href="leads.html" style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.55);text-decoration:none;padding:5px 12px;border-radius:6px;">Lead Radar</a>
+    <a href="rankradar.html" style="font-size:13px;font-weight:500;color:var(--cyan);text-decoration:none;padding:5px 12px;border-radius:6px;background:rgba(0,196,217,0.12);">RankRadar</a>
+    <a href="prompt-sweeper.html" style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.55);text-decoration:none;padding:5px 12px;border-radius:6px;">Prompt Sweeper</a>
+    <a href="answerweave.html" style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.55);text-decoration:none;padding:5px 12px;border-radius:6px;">AnswerWeave</a>
+  </div>
+</nav>
+
+<div class="main">
+  <!-- Hero -->
+  <div class="demo-hero">
+    <h1>Rank<span>Radar</span></h1>
+    <p>AI-powered competitive intelligence for marketing agencies. Discover your competitors, analyze their channels, rank your position, and get a strategy to climb.</p>
+  </div>
+
+  <!-- Input Card -->
+  <div class="input-card" id="input-card">
+    <h2>Run a Competitive Analysis</h2>
+    <p class="subtitle">Enter a business to analyze. RankRadar will identify competitors, score channels, rank your market position, and generate a climb strategy.</p>
+    <form id="analysis-form" class="form-grid" onsubmit="runAnalysis(event)">
+      <div class="form-group">
+        <label>Business Name *</label>
+        <input type="text" id="f-name" placeholder="e.g. Sunrise Plumbing" required>
+      </div>
+      <div class="form-group">
+        <label>Industry *</label>
+        <input type="text" id="f-industry" placeholder="e.g. Plumbing & HVAC" required>
+      </div>
+      <div class="form-group">
+        <label>Location *</label>
+        <input type="text" id="f-location" placeholder="e.g. Tampa, FL" required>
+      </div>
+      <div class="form-group">
+        <label>Website (optional)</label>
+        <input type="text" id="f-website" placeholder="e.g. sunriseplumbing.com">
+      </div>
+      <button type="submit" class="btn-analyze" id="btn-analyze">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        Analyze Market
+      </button>
+    </form>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-section" id="loading-section">
+    <div class="loading-title">Analyzing competitive landscape...</div>
+    <div class="loading-steps">
+      <div class="loading-step" id="step-1">
+        <div class="step-icon"><div class="step-spinner"></div><span class="step-check">&#10003;</span></div>
+        Scanning market...
+      </div>
+      <div class="loading-step" id="step-2">
+        <div class="step-icon"><div class="step-spinner"></div><span class="step-check">&#10003;</span></div>
+        Identifying competitors...
+      </div>
+      <div class="loading-step" id="step-3">
+        <div class="step-icon"><div class="step-spinner"></div><span class="step-check">&#10003;</span></div>
+        Analyzing channels...
+      </div>
+      <div class="loading-step" id="step-4">
+        <div class="step-icon"><div class="step-spinner"></div><span class="step-check">&#10003;</span></div>
+        Building rank model...
+      </div>
+      <div class="loading-step" id="step-5">
+        <div class="step-icon"><div class="step-spinner"></div><span class="step-check">&#10003;</span></div>
+        Generating climb strategy...
+      </div>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div class="error-msg" id="error-msg"></div>
+
+  <!-- Results -->
+  <div class="results" id="results">
+
+    <!-- Market Summary -->
+    <div class="result-section market-summary" id="sec-summary">
+      <div class="section-badge badge-discovery">Market Overview</div>
+      <h3 class="section-title" id="summary-title"></h3>
+      <p class="section-subtitle" id="summary-text"></p>
+    </div>
+
+    <!-- Competitor Discovery -->
+    <div class="result-section" id="sec-competitors">
+      <div class="section-badge badge-discovery">Phase 1</div>
+      <h3 class="section-title">Competitor Discovery</h3>
+      <p class="section-subtitle">Top competitors identified in your market, ranked by threat level.</p>
+      <div class="competitor-grid" id="competitor-grid"></div>
+    </div>
+
+    <!-- Channel Analysis -->
+    <div class="result-section" id="sec-channels">
+      <div class="section-badge badge-channels">Phase 2</div>
+      <h3 class="section-title">Channel Scorecard</h3>
+      <p class="section-subtitle">How you compare across every major marketing channel (scored 0-10).</p>
+      <div class="channel-table-wrap">
+        <table class="channel-table" id="channel-table">
+          <thead>
+            <tr>
+              <th>Business</th>
+              <th class="score-cell">GBP</th>
+              <th class="score-cell">SEO</th>
+              <th class="score-cell">Reviews</th>
+              <th class="score-cell">Social</th>
+              <th class="score-cell">Paid</th>
+              <th class="score-cell">Directories</th>
+              <th class="score-cell">Backlinks</th>
+            </tr>
+          </thead>
+          <tbody id="channel-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Competitive Ranking -->
+    <div class="result-section" id="sec-ranking">
+      <div class="section-badge badge-ranking">Phase 3</div>
+      <h3 class="section-title">Competitive Ranking</h3>
+      <p class="section-subtitle">Your overall market position and where you're losing ground.</p>
+      <div class="ranking-header">
+        <div class="rank-score-big">
+          <div class="rank-score-num" id="rank-score">--</div>
+          <div class="rank-score-label">out of 100</div>
+        </div>
+        <div>
+          <div class="rank-position-badge" id="rank-badge">--</div>
+        </div>
+      </div>
+      <div class="standings-bars" id="standings-bars"></div>
+      <h4 style="font-weight:700;font-size:0.95rem;color:var(--navy);margin-bottom:1rem;">Where You're Losing</h4>
+      <div class="gaps-grid" id="gaps-grid"></div>
+    </div>
+
+    <!-- Climb Strategy -->
+    <div class="result-section" id="sec-climb">
+      <div class="section-badge badge-strategy">Phase 4</div>
+      <h3 class="section-title">Climb Strategy</h3>
+      <p class="section-subtitle">Prioritized actions to improve your rank, sorted by timeline and impact.</p>
+
+      <div class="climb-tier tier-immediate" id="tier-immediate">
+        <div class="tier-header">
+          <div class="tier-icon">!</div>
+          <span class="tier-label">Immediate Wins</span>
+          <span class="tier-timeline">0 - 30 days</span>
+        </div>
+        <div class="rec-cards" id="recs-immediate"></div>
+      </div>
+
+      <div class="climb-tier tier-short" id="tier-short">
+        <div class="tier-header">
+          <div class="tier-icon">&#9650;</div>
+          <span class="tier-label">Short-Term Plays</span>
+          <span class="tier-timeline">30 - 90 days</span>
+        </div>
+        <div class="rec-cards" id="recs-short"></div>
+      </div>
+
+      <div class="climb-tier tier-long" id="tier-long">
+        <div class="tier-header">
+          <div class="tier-icon">&#9733;</div>
+          <span class="tier-label">Long-Term Authority</span>
+          <span class="tier-timeline">90 - 180 days</span>
+        </div>
+        <div class="rec-cards" id="recs-long"></div>
+      </div>
+    </div>
+
+    <!-- New Analysis -->
+    <div class="new-analysis-wrap">
+      <button class="btn-new" onclick="resetAnalysis()">Run New Analysis</button>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="demo-footer">
+  <a href="index.html" class="demo-footer-logo">Russell <span>SPC</span> LLC</a>
+  <p>Systems. Products. Consulting.</p>
+</div>
+
+<script>
+// Replace with your deployed worker URL after running: cd rankradar-worker && wrangler deploy
+const WORKER_URL = 'https://rankradar-worker.rruss7997.workers.dev';
+
+// ── Loading animation ──
+function animateLoading() {
+  const steps = [1,2,3,4,5];
+  let i = 0;
+  return setInterval(() => {
+    if (i > 0) {
+      document.getElementById('step-' + i).classList.remove('active');
+      document.getElementById('step-' + i).classList.add('done');
+    }
+    i++;
+    if (i <= 5) {
+      document.getElementById('step-' + i).classList.add('active');
+    }
+  }, 2800);
+}
+
+function resetLoadingSteps() {
+  for (let i = 1; i <= 5; i++) {
+    const el = document.getElementById('step-' + i);
+    el.classList.remove('active', 'done');
+  }
+}
+
+// ── Score helpers ──
+function scoreClass(val, max) {
+  const pct = max === 10 ? val / 10 : val / 100;
+  if (pct >= 0.7) return 'score-high';
+  if (pct >= 0.4) return 'score-mid';
+  return 'score-low';
+}
+
+function threatClass(score) {
+  if (score >= 75) return 'threat-high';
+  if (score >= 50) return 'threat-medium';
+  return 'threat-low';
+}
+
+function posClass(pos) {
+  const p = pos.toLowerCase();
+  if (p === 'leader') return 'pos-leader';
+  if (p === 'challenger') return 'pos-challenger';
+  if (p === 'contender') return 'pos-contender';
+  return 'pos-undiscovered';
+}
+
+function effortClass(e) { return 'effort-' + e.toLowerCase(); }
+function impactClass(i) { return 'impact-' + i.toLowerCase(); }
+
+function esc(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+// ── Render functions ──
+function renderSummary(report, businessName) {
+  document.getElementById('summary-title').innerHTML = 'Competitive landscape for <span class="biz-name">' + esc(businessName) + '</span>';
+  document.getElementById('summary-text').textContent = report.marketSummary;
+}
+
+function renderCompetitors(competitors) {
+  const grid = document.getElementById('competitor-grid');
+  grid.innerHTML = competitors.map(c => `
+    <div class="comp-card">
+      <div class="comp-header">
+        <div>
+          <div class="comp-name">${esc(c.name)}</div>
+          <div class="comp-website">${esc(c.website)}</div>
+        </div>
+        <span class="comp-threat ${threatClass(c.threatScore)}">${c.threatScore}/100</span>
+      </div>
+      <div class="comp-category">${esc(c.category)} Competitor</div>
+      <div class="comp-strengths">${c.strengths.map(s => '<span>' + esc(s) + '</span>').join('')}</div>
+      <div class="comp-how">${esc(c.howTheyWin)}</div>
+    </div>
+  `).join('');
+}
+
+function renderChannels(channelScores, businessName) {
+  const tbody = document.getElementById('channel-tbody');
+  const channels = ['gbp','seo','reviews','social','paid','directories','backlinks'];
+
+  function row(name, scores, isClient) {
+    const cls = isClient ? ' class="client-row"' : '';
+    return `<tr${cls}>
+      <td class="biz-cell">${esc(name)}${isClient ? ' (You)' : ''}</td>
+      ${channels.map(ch => {
+        const v = scores[ch] || 0;
+        return `<td class="score-cell"><span class="score-pip ${scoreClass(v, 10)}">${v}</span></td>`;
+      }).join('')}
+    </tr>`;
+  }
+
+  let html = row(businessName, channelScores.client, true);
+  channelScores.competitors.forEach(c => { html += row(c.name, c, false); });
+  tbody.innerHTML = html;
+}
+
+function renderRanking(ranking, businessName) {
+  document.getElementById('rank-score').textContent = ranking.clientScore;
+  const badge = document.getElementById('rank-badge');
+  badge.textContent = ranking.clientPosition;
+  badge.className = 'rank-position-badge ' + posClass(ranking.clientPosition);
+
+  const barsEl = document.getElementById('standings-bars');
+  const sorted = [...ranking.standings].sort((a, b) => b.score - a.score);
+  const maxScore = sorted[0]?.score || 100;
+
+  barsEl.innerHTML = sorted.map(s => {
+    const isClient = s.name.toLowerCase() === businessName.toLowerCase();
+    return `<div class="standing-row">
+      <div class="standing-name ${isClient ? 'is-client' : ''}">${esc(s.name)}</div>
+      <div class="standing-bar-track">
+        <div class="standing-bar-fill ${isClient ? 'is-client' : ''}" style="width:0" data-width="${(s.score / maxScore * 100).toFixed(1)}%"></div>
+      </div>
+      <div class="standing-score">${s.score}</div>
+    </div>`;
+  }).join('');
+
+  // Animate bars
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      barsEl.querySelectorAll('.standing-bar-fill').forEach(bar => {
+        bar.style.width = bar.dataset.width;
+      });
+    }, 100);
+  });
+
+  // Gaps
+  const gapsEl = document.getElementById('gaps-grid');
+  gapsEl.innerHTML = (ranking.topGaps || []).map(g => `
+    <div class="gap-card">
+      <div class="gap-channel">${esc(g.channel)} <span class="gap-score-diff">-${g.gap} pts</span></div>
+      <div class="gap-vs">vs. ${esc(g.vsCompetitor)}</div>
+      <div class="gap-detail">${esc(g.detail)}</div>
+    </div>
+  `).join('');
+}
+
+function renderClimb(climbPlan) {
+  function renderTier(items, containerId) {
+    const el = document.getElementById(containerId);
+    el.innerHTML = (items || []).map(r => `
+      <div class="rec-card">
+        <div class="rec-action">${esc(r.action)}</div>
+        <div class="rec-why">${esc(r.why)}</div>
+        <div class="rec-meta">
+          <span class="rec-tag ${effortClass(r.effort)}">Effort: ${r.effort}</span>
+          <span class="rec-tag ${impactClass(r.impact)}">Impact: ${r.impact}</span>
+          <span class="rec-outpaces">Outpaces: ${esc(r.outpaces)}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+  renderTier(climbPlan.immediateWins, 'recs-immediate');
+  renderTier(climbPlan.shortTerm, 'recs-short');
+  renderTier(climbPlan.longTerm, 'recs-long');
+}
+
+// ── Reveal sections with stagger ──
+function revealResults() {
+  const sections = document.querySelectorAll('.result-section');
+  sections.forEach((sec, i) => {
+    setTimeout(() => sec.classList.add('visible'), i * 200);
+  });
+}
+
+// ── Main analysis function ──
+async function runAnalysis(e) {
+  e.preventDefault();
+
+  const businessName = document.getElementById('f-name').value.trim();
+  const industry = document.getElementById('f-industry').value.trim();
+  const location = document.getElementById('f-location').value.trim();
+  const website = document.getElementById('f-website').value.trim();
+
+  if (!businessName || !industry || !location) return;
+
+  // Show loading
+  document.getElementById('input-card').style.display = 'none';
+  document.getElementById('results').classList.remove('active');
+  document.getElementById('error-msg').classList.remove('active');
+  resetLoadingSteps();
+  document.getElementById('loading-section').classList.add('active');
+  const loadingInterval = animateLoading();
+
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ businessName, industry, location, website: website || undefined }),
+    });
+
+    const data = await res.json();
+
+    // Complete all loading steps
+    clearInterval(loadingInterval);
+    for (let i = 1; i <= 5; i++) {
+      document.getElementById('step-' + i).classList.remove('active');
+      document.getElementById('step-' + i).classList.add('done');
+    }
+
+    if (!data.success || !data.report) {
+      throw new Error(data.error || 'Analysis failed');
+    }
+
+    const report = data.report;
+
+    // Small delay to let the user see all steps complete
+    await new Promise(r => setTimeout(r, 600));
+
+    // Hide loading, render results
+    document.getElementById('loading-section').classList.remove('active');
+
+    renderSummary(report, businessName);
+    renderCompetitors(report.competitors || []);
+    renderChannels(report.channelScores || { client: {}, competitors: [] }, businessName);
+    renderRanking(report.ranking || { clientScore: 0, clientPosition: 'Undiscovered', standings: [], topGaps: [] }, businessName);
+    renderClimb(report.climbPlan || { immediateWins: [], shortTerm: [], longTerm: [] });
+
+    document.getElementById('results').classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Staggered reveal
+    setTimeout(revealResults, 100);
+
+  } catch (err) {
+    clearInterval(loadingInterval);
+    document.getElementById('loading-section').classList.remove('active');
+    document.getElementById('input-card').style.display = 'block';
+    const errEl = document.getElementById('error-msg');
+    errEl.textContent = err.message || 'Something went wrong. Please try again.';
+    errEl.classList.add('active');
+  }
+}
+
+function resetAnalysis() {
+  document.getElementById('results').classList.remove('active');
+  document.querySelectorAll('.result-section').forEach(s => s.classList.remove('visible'));
+  document.getElementById('input-card').style.display = 'block';
+  document.getElementById('error-msg').classList.remove('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>

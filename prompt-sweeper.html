@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt Sweeper — Russell SPC</title>
+<meta name="description" content="Prompt Sweeper — catch accidentally included AI prompts and residue in your copy before your audience does. Built by Russell SPC.">
+<link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- File parsers (client-side only) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+:root {
+  --linen: #FAF7F0;
+  --navy: #0B1F3A;
+  --navy-mid: #0F2A4E;
+  --gun: #1E1E1E;
+  --gun-light: #444444;
+  --cyan: #00C4D9;
+  --white: #ffffff;
+  --border: #E5E7EB;
+  --muted: #6B7280;
+  --text: #1E1E1E;
+  --red: #EF4444;
+  --amber: #F59E0B;
+  --green: #22C55E;
+  --font: 'Inter', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 17px; }
+body {
+  font-family: var(--font);
+  background: var(--linen);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--text);
+}
+
+/* Nav */
+.demo-nav {
+  width: 100%;
+  background: var(--navy);
+  padding: 0.9rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+}
+.demo-nav-left { display: flex; align-items: center; gap: 1.25rem; }
+.demo-nav-logo {
+  font-weight: 800; font-size: 0.95rem; color: var(--white);
+  text-decoration: none; letter-spacing: -0.02em;
+}
+.demo-nav-logo span { color: var(--cyan); }
+.demo-nav-divider { width: 1px; height: 18px; background: rgba(255,255,255,0.15); }
+.demo-nav-product { font-size: 0.82rem; font-weight: 500; color: rgba(255,255,255,0.6); }
+.demo-nav-back {
+  font-size: 0.78rem; font-weight: 500; color: var(--cyan);
+  text-decoration: none; display: flex; align-items: center; gap: 0.4rem;
+  transition: opacity 0.2s;
+}
+.demo-nav-back:hover { opacity: 0.8; }
+
+/* Layout */
+.demo-container { width: 100%; max-width: 680px; padding: 2.5rem 1rem 3rem; }
+
+/* Card */
+.card {
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 2px 24px rgba(11,31,58,0.08), 0 1px 4px rgba(11,31,58,0.04);
+  overflow: hidden;
+}
+.card-header {
+  background: var(--navy); padding: 1.5rem 1.75rem;
+  position: relative; overflow: hidden;
+}
+.card-header::after {
+  content: ''; position: absolute; right: -30px; top: -40px;
+  width: 140px; height: 140px; border-radius: 50%;
+  background: rgba(0,196,217,0.1); pointer-events: none;
+}
+.card-header h1 { font-size: 1.1rem; font-weight: 700; color: var(--white); position: relative; }
+.card-header p { font-size: 0.76rem; color: rgba(0,196,217,0.7); margin-top: 4px; position: relative; }
+
+/* Form */
+.card-body { padding: 1.5rem 1.75rem; }
+
+/* Tabs */
+.input-tabs {
+  display: flex; gap: 0; margin-bottom: 1rem;
+  border: 1.5px solid var(--border); border-radius: 6px; overflow: hidden;
+}
+.input-tab {
+  flex: 1; padding: 0.6rem; text-align: center;
+  font-size: 0.75rem; font-weight: 600; font-family: var(--font);
+  background: var(--white); color: var(--muted);
+  border: none; cursor: pointer; transition: all 0.15s;
+}
+.input-tab:not(:last-child) { border-right: 1.5px solid var(--border); }
+.input-tab.active { background: var(--navy); color: var(--white); }
+.input-tab:hover:not(.active) { background: #F3F4F6; }
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* Textarea */
+.field { margin-bottom: 1rem; }
+.field label {
+  display: block; font-size: 0.7rem; font-weight: 600; color: var(--muted);
+  margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.06em;
+}
+.field textarea {
+  width: 100%; min-height: 200px; border: 1.5px solid var(--border); border-radius: 6px;
+  padding: 12px 14px; font-size: 0.85rem; font-family: var(--font); color: var(--text);
+  background: var(--white); line-height: 1.7; resize: vertical;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.field textarea:focus { outline: none; border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(0,196,217,0.12); }
+.field textarea::placeholder { color: #C4C9D4; }
+.char-count { font-size: 0.65rem; color: var(--muted); text-align: right; margin-top: 4px; font-variant-numeric: tabular-nums; }
+
+/* Drop zone */
+.drop-zone {
+  border: 2px dashed var(--border); border-radius: 8px;
+  padding: 2.5rem 1.5rem; text-align: center;
+  cursor: pointer; transition: all 0.2s;
+  background: #FAFAFA;
+}
+.drop-zone:hover, .drop-zone.dragover {
+  border-color: var(--cyan); background: rgba(0,196,217,0.04);
+}
+.drop-zone-icon { font-size: 2rem; margin-bottom: 0.75rem; opacity: 0.4; }
+.drop-zone-title { font-size: 0.85rem; font-weight: 600; color: var(--navy); margin-bottom: 0.3rem; }
+.drop-zone-sub { font-size: 0.72rem; color: var(--muted); line-height: 1.5; }
+.drop-zone-formats { font-size: 0.65rem; color: #9CA3AF; margin-top: 0.5rem; }
+.drop-zone input[type="file"] { display: none; }
+.file-info {
+  display: none; align-items: center; gap: 10px;
+  padding: 0.75rem 1rem; background: #F3F4F6; border-radius: 6px;
+  margin-top: 0.75rem; font-size: 0.78rem;
+}
+.file-info .file-name { flex: 1; font-weight: 500; color: var(--navy); }
+.file-info .file-clear {
+  font-size: 0.72rem; font-weight: 600; color: var(--red); cursor: pointer;
+  background: none; border: none; font-family: var(--font);
+}
+/* Button */
+.btn-sweep {
+  width: 100%; height: 48px; background: var(--navy); color: var(--white);
+  border: none; border-radius: 6px; font-size: 0.88rem; font-weight: 600;
+  font-family: var(--font); cursor: pointer; letter-spacing: 0.02em;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: background 0.2s, transform 0.1s;
+}
+.btn-sweep:hover:not(:disabled) { background: var(--navy-mid); }
+.btn-sweep:active:not(:disabled) { transform: scale(0.99); }
+.btn-sweep:disabled { background: #9CA3AF; cursor: not-allowed; }
+
+/* Spinner */
+.spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff;
+  border-radius: 50%; animation: spin 0.65s linear infinite; flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Results */
+.results-panel { display: none; border-top: 1px solid var(--border); padding: 1.5rem 1.75rem; }
+.score-row {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;
+}
+.score-label { font-size: 0.7rem; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+.score-big { font-size: 2.8rem; font-weight: 700; line-height: 1; }
+.score-denom { font-size: 1rem; color: var(--muted); font-weight: 400; }
+.grade-pill { font-size: 0.76rem; font-weight: 600; padding: 6px 16px; border-radius: 20px; }
+
+/* Issue summary */
+.issue-summary { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1.25rem; }
+.issue-badge {
+  font-size: 0.65rem; font-weight: 600; padding: 4px 10px;
+  border-radius: 12px; display: flex; align-items: center; gap: 4px;
+}
+.issue-badge .count { background: rgba(0,0,0,0.1); padding: 1px 5px; border-radius: 8px; font-variant-numeric: tabular-nums; }
+
+/* Highlighted text */
+.highlighted-text {
+  font-size: 0.82rem; line-height: 1.8; color: var(--text);
+  background: #FAFAFA; border: 1px solid var(--border); border-radius: 8px;
+  padding: 1rem 1.25rem; margin-bottom: 1.25rem;
+  max-height: 400px; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word;
+}
+.hl-high { background: #FEE2E2; color: #991B1B; padding: 1px 3px; border-radius: 3px; border-bottom: 2px solid var(--red); }
+.hl-medium { background: #FEF9C3; color: #854D0E; padding: 1px 3px; border-radius: 3px; border-bottom: 2px solid var(--amber); }
+.hl-low { background: #DBEAFE; color: #1E40AF; padding: 1px 3px; border-radius: 3px; border-bottom: 2px solid #3B82F6; }
+
+/* Issue rows */
+.issue-list { margin-bottom: 1.25rem; }
+.issue-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.78rem;
+}
+.issue-row:last-child { border-bottom: none; }
+.issue-severity { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+.issue-match {
+  font-weight: 600; color: var(--navy); font-size: 0.72rem;
+  background: #F3F4F6; padding: 2px 6px; border-radius: 4px;
+}
+.issue-category { font-size: 0.65rem; color: var(--muted); }
+
+/* Footer */
+.footer-note {
+  font-size: 0.65rem; color: #C4C9D4; text-align: center;
+  padding: 0.75rem 1.75rem; border-top: 1px solid var(--border);
+}
+.powered { margin-top: 1.5rem; font-size: 0.72rem; color: #9CA3AF; text-align: center; }
+.powered a { color: var(--cyan); text-decoration: none; font-weight: 500; }
+.powered a:hover { text-decoration: underline; }
+
+@media (max-width: 600px) {
+  .demo-nav { padding: 0.75rem 1rem; }
+  .demo-nav-product { display: none; }
+  .demo-container { padding: 1.5rem 0.75rem 2rem; }
+}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="nav-logo" href="index.html"><span class="nav-logo-text">Russell <span>SPC</span></span></a>
+  <div class="nav-divider"></div>
+  <div class="nav-links">
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="score.html">Score Checker</a>
+    <a class="nav-link" href="leads.html">Lead Radar</a>
+    <a class="nav-link" href="rankradar.html">RankRadar</a>
+    <a class="nav-link active" href="prompt-sweeper.html">Prompt Sweeper</a>
+    <a class="nav-link" href="answerweave.html">AnswerWeave</a>
+  </div>
+</nav>
+
+<div class="demo-container">
+  <div class="card">
+
+    <div class="card-header">
+      <h1>Prompt Sweeper</h1>
+      <p>Catch AI prompt residue before your audience does</p>
+    </div>
+
+    <div class="card-body">
+      <!-- Input mode tabs -->
+      <div class="input-tabs">
+        <button class="input-tab active" onclick="switchInput('paste')">Paste Text</button>
+        <button class="input-tab" onclick="switchInput('upload')">Upload File</button>
+        <button class="input-tab" onclick="switchInput('site')">Scan a Site</button>
+      </div>
+
+      <!-- Paste tab -->
+      <div class="tab-panel active" id="panel-paste">
+        <div class="field">
+          <label>Paste your copy</label>
+          <textarea id="input-text" placeholder="Paste your email, web copy, article, or any text you want to check for accidentally included AI prompts..."></textarea>
+          <div class="char-count"><span id="char-count">0</span> characters</div>
+        </div>
+      </div>
+
+      <!-- Upload tab -->
+      <div class="tab-panel" id="panel-upload">
+        <div class="drop-zone" id="drop-zone">
+          <div class="drop-zone-icon">+</div>
+          <div class="drop-zone-title">Drop a file here or click to browse</div>
+          <div class="drop-zone-sub">We'll extract the text and sweep it for prompt residue</div>
+          <div class="drop-zone-formats">.txt &middot; .docx &middot; .pdf</div>
+          <input type="file" id="file-input" accept=".txt,.docx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain">
+        </div>
+        <div class="file-info" id="file-info">
+          <span class="file-name" id="file-name"></span>
+          <button class="file-clear" onclick="clearFile()">Remove</button>
+        </div>
+      </div>
+
+      <!-- Site scan tab -->
+      <div class="tab-panel" id="panel-site">
+        <div class="field">
+          <label>Website URL</label>
+          <input type="url" id="site-url" placeholder="https://example.com" style="width:100%;height:44px;border:1.5px solid var(--border);border-radius:6px;padding:0 14px;font-size:0.85rem;font-family:var(--font);color:var(--text);background:var(--white);transition:border-color 0.2s,box-shadow 0.2s;">
+          <p style="font-size:0.65rem;color:#9CA3AF;margin-top:4px;">We'll fetch the visible text from this page and scan it for prompt residue</p>
+        </div>
+      </div>
+
+      <button class="btn-sweep" id="btn" onclick="sweep()">
+        Sweep for Prompts
+      </button>
+    </div>
+
+    <div class="results-panel" id="results">
+      <div class="score-row">
+        <div>
+          <div class="score-label">Cleanliness Score</div>
+          <div>
+            <span class="score-big" id="score-num">&mdash;</span>
+            <span class="score-denom">/100</span>
+          </div>
+        </div>
+        <span class="grade-pill" id="grade"></span>
+      </div>
+
+      <div class="issue-summary" id="issue-summary"></div>
+      <div id="issue-rows"></div>
+      <div class="highlighted-text" id="highlighted-text"></div>
+
+    </div>
+
+    <div class="footer-note">
+      All processing happens in your browser. No text is sent to any server.
+    </div>
+  </div>
+
+  <div class="powered">
+    Built by <a href="index.html">Russell SPC</a>
+  </div>
+</div>
+
+<script>
+// PDF.js worker
+if (window.pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+}
+
+// ── Input tab switching ──
+let currentMode = "paste";
+let loadedFileText = null;
+
+function switchInput(mode) {
+  currentMode = mode;
+  document.querySelectorAll(".input-tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+  if (mode === "paste") {
+    document.querySelectorAll(".input-tab")[0].classList.add("active");
+    document.getElementById("panel-paste").classList.add("active");
+  } else if (mode === "upload") {
+    document.querySelectorAll(".input-tab")[1].classList.add("active");
+    document.getElementById("panel-upload").classList.add("active");
+  } else {
+    document.querySelectorAll(".input-tab")[2].classList.add("active");
+    document.getElementById("panel-site").classList.add("active");
+  }
+}
+
+// ── Character counter ──
+document.getElementById("input-text").addEventListener("input", function() {
+  document.getElementById("char-count").textContent = this.value.length;
+});
+
+// ── File handling ──
+const dropZone = document.getElementById("drop-zone");
+const fileInput = document.getElementById("file-input");
+
+dropZone.addEventListener("click", () => fileInput.click());
+dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("dragover"); });
+dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
+dropZone.addEventListener("drop", e => {
+  e.preventDefault();
+  dropZone.classList.remove("dragover");
+  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener("change", () => {
+  if (fileInput.files.length) handleFile(fileInput.files[0]);
+});
+
+async function handleFile(file) {
+  const ext = file.name.split(".").pop().toLowerCase();
+  if (!["txt", "docx", "pdf"].includes(ext)) {
+    alert("Unsupported file type. Please use .txt, .docx, or .pdf");
+    return;
+  }
+  document.getElementById("file-name").textContent = file.name;
+  document.getElementById("file-info").style.display = "flex";
+  dropZone.style.display = "none";
+
+  const btn = document.getElementById("btn");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Reading file\u2026';
+
+  try {
+    if (ext === "txt") {
+      loadedFileText = await file.text();
+    } else if (ext === "docx") {
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await mammoth.extractRawText({ arrayBuffer });
+      loadedFileText = result.value;
+    } else if (ext === "pdf") {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let text = "";
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        text += content.items.map(item => item.str).join(" ") + "\n";
+      }
+      loadedFileText = text;
+    }
+    btn.innerHTML = "Sweep for Prompts";
+    btn.disabled = false;
+  } catch (err) {
+    alert("Could not read file: " + err.message);
+    clearFile();
+    btn.innerHTML = "Sweep for Prompts";
+    btn.disabled = false;
+  }
+}
+
+function clearFile() {
+  loadedFileText = null;
+  fileInput.value = "";
+  document.getElementById("file-info").style.display = "none";
+  dropZone.style.display = "";
+}
+
+// ── Pattern rules ──
+const RULES = [
+  // HIGH: Prompt instructions
+  { pattern: /\b(please\s+)?(write|create|generate|draft|compose|produce|craft|make)\s+(me\s+)?(a|an|the)\s+\w+/gi, category: "Prompt Instruction", severity: "high" },
+  { pattern: /\b(rewrite|rephrase|revise|paraphrase|summarize|expand|shorten|simplify)\s+(this|the|my|that|it)\b/gi, category: "Prompt Instruction", severity: "high" },
+  { pattern: /\bmake\s+(this|it)\s+(sound|look|read|seem|feel)\s+(more\s+)?\w+/gi, category: "Prompt Instruction", severity: "high" },
+  { pattern: /\b(can you|could you|would you|I need you to|I want you to)\s+\w+/gi, category: "Prompt Instruction", severity: "high" },
+  { pattern: /\b(act as|pretend you are|you are a|assume the role of|respond as)\s+/gi, category: "Role Assignment", severity: "high" },
+  { pattern: /\busing\s+(a\s+)?(professional|casual|formal|friendly|persuasive|authoritative)\s+tone\b/gi, category: "Tone Instruction", severity: "high" },
+  { pattern: /\bin\s+(about\s+)?\d+\s+(words|sentences|paragraphs|bullet points)\b/gi, category: "Length Instruction", severity: "high" },
+  { pattern: /\bkeep\s+it\s+(under|around|about|to)\s+\d+/gi, category: "Length Instruction", severity: "high" },
+  // HIGH: Prompt injection spillage
+  { pattern: /\b(ignore|disregard)\s+(all\s+)?(previous|prior|above)\s+(instructions|prompts|rules)\b/gi, category: "Prompt Injection", severity: "high" },
+  { pattern: /\bas\s+an?\s+(unrestricted|unfiltered|uncensored|jailbroken)\s+(AI|model|assistant)\b/gi, category: "Prompt Injection", severity: "high" },
+  { pattern: /\b(DAN|do anything now|developer mode)\b/gi, category: "Prompt Injection", severity: "high" },
+  { pattern: /\bsystem\s*:\s*/gi, category: "Prompt Injection", severity: "high" },
+  { pattern: /\b(bypass|override)\s+(safety|content|ethical)\s+(filter|restriction|guideline)s?\b/gi, category: "Prompt Injection", severity: "high" },
+
+  // MEDIUM: AI response artifacts
+  { pattern: /\b(sure|absolutely|of course|certainly|great question)[!,.]?\s*(here[''\u2019]?s|let me|I[''\u2019]?d be happy|I[''\u2019]?ll)\b/gi, category: "AI Preamble", severity: "medium" },
+  { pattern: /\bhere[''\u2019]?s\s+(a|an|the|your)\s+(revised|updated|rewritten|draft|suggested)\b/gi, category: "AI Preamble", severity: "medium" },
+  { pattern: /\bI[''\u2019]?ve\s+(drafted|written|created|prepared|put together|revised|updated)\s+(a|an|the|this|your)\b/gi, category: "AI Preamble", severity: "medium" },
+  { pattern: /\bas\s+an?\s+(AI|artificial intelligence|language model|large language model|LLM|assistant|chatbot)\b/gi, category: "AI Self-Reference", severity: "medium" },
+  { pattern: /\bI[''\u2019]?m\s+an?\s+(AI|artificial intelligence|language model|assistant)\b/gi, category: "AI Self-Reference", severity: "medium" },
+  { pattern: /\b(feel free to|don[''\u2019]?t hesitate to)\s+(let me know|reach out|ask|modify|adjust|edit|change)/gi, category: "AI Closing", severity: "medium" },
+  { pattern: /\blet me know if you[''\u2019]?d?\s+(like|want|need)\s+(me to|any|further|more)\b/gi, category: "AI Closing", severity: "medium" },
+  { pattern: /\bI\s+(hope|trust)\s+this\s+(helps|works|meets|is)\b/gi, category: "AI Closing", severity: "medium" },
+  { pattern: /\bwould you like me to\s+\w+/gi, category: "AI Closing", severity: "medium" },
+  { pattern: /\bI\s+can\s+(adjust|modify|revise|tweak|change)\s+(this|it|the|any)\b/gi, category: "AI Closing", severity: "medium" },
+
+  // MEDIUM: AI Slop phrases
+  { pattern: /\bdelve(s|d)?\s+(into|deeper)\b/gi, category: "AI Slop", severity: "medium" },
+  { pattern: /\blet[''\u2019]?s\s+(explore|dive|unpack|break down|take a look)\b/gi, category: "AI Slop", severity: "medium" },
+  { pattern: /\b(deep|deeper)\s+dive\b/gi, category: "AI Slop", severity: "medium" },
+  { pattern: /\bit[''\u2019]?s\s+(important|worth|crucial)\s+to\s+note\s+that\b/gi, category: "AI Slop", severity: "medium" },
+  { pattern: /\bin\s+today[''\u2019]?s\s+\w+[\s-]*(paced|evolving|changing|driven)?\s*(world|landscape|era|environment|age)\b/gi, category: "AI Slop", severity: "medium" },
+  { pattern: /\bnavigate\s+the\s+(complexities|challenges|intricacies|nuances|waters)\s+of\b/gi, category: "AI Slop", severity: "medium" },
+  { pattern: /\bunlock\s+the\s+(power|potential|full potential|secrets|true potential)\s+of\b/gi, category: "AI Slop", severity: "medium" },
+  { pattern: /\b(game[\s-]?changer|paradigm\s+shift)\b/gi, category: "AI Slop", severity: "medium" },
+  { pattern: /\b(holistic|comprehensive)\s+(approach|guide|overview|solution|strategy|understanding)\b/gi, category: "AI Slop", severity: "medium" },
+  { pattern: /\bin\s+the\s+(realm|world|landscape|arena|sphere)\s+of\b/gi, category: "AI Slop", severity: "medium" },
+  { pattern: /\brich\s+tapestry\b/gi, category: "AI Slop", severity: "medium" },
+  { pattern: /\bat\s+the\s+end\s+of\s+the\s+day\b/gi, category: "AI Slop", severity: "medium" },
+  { pattern: /\bthis\s+underscores\s+the\s+(importance|need|value|significance)\s+of\b/gi, category: "AI Slop", severity: "medium" },
+  { pattern: /\b(leveraging|tapping\s+into)\s+the\s+(power|potential)\s+of\b/gi, category: "AI Slop", severity: "medium" },
+  { pattern: /\bas\s+we\s+(know|navigate|move\s+forward|look\s+ahead)\b/gi, category: "AI Slop", severity: "medium" },
+
+  // MEDIUM: AI structural tells
+  { pattern: /\bit[''\u2019]?s\s+not\s+(just|only)\s+(about\s+)?\w+[,;]\s*(it[''\u2019]?s|but)\s+(about|also)\b/gi, category: "AI Structure", severity: "medium" },
+  { pattern: /\bthis\s+isn[''\u2019]?t\s+just\s+(about\s+)?\w+[,;]\s*(it[''\u2019]?s|but)\b/gi, category: "AI Structure", severity: "medium" },
+  { pattern: /\b(this|these)\s+(shows?|demonstrates?|highlights?|illustrates?|underscores?|proves?)\s+(that|how|the|why)\b/gi, category: "AI Structure", severity: "medium" },
+  { pattern: /\b(but|so)\s+what\s+(does this|if|can we)\b/gi, category: "AI Structure", severity: "medium" },
+
+  // LOW: Placeholders
+  { pattern: /\[(?:your|my|client|company|insert|add|recipient)[\w\s]*\]/gi, category: "Placeholder", severity: "low" },
+  { pattern: /\[(?:NAME|EMAIL|DATE|PHONE|ADDRESS|TITLE|COMPANY|PRODUCT|SERVICE|CITY|STATE|URL|WEBSITE)[\w\s]*\]/gi, category: "Placeholder", severity: "low" },
+  { pattern: /\{(?:your|my|client|company|insert|add)[\w\s]*\}/gi, category: "Placeholder", severity: "low" },
+  { pattern: /\bXXX+\b/g, category: "Placeholder", severity: "low" },
+  { pattern: /\b(Lorem ipsum|dolor sit amet)\b/gi, category: "Placeholder", severity: "low" },
+  // LOW: Meta
+  { pattern: /\bthis\s+(section|paragraph|part|email|text|copy|draft)\s+(should|could|needs to|is meant to)\b/gi, category: "Meta Instruction", severity: "low" },
+  { pattern: /\bTODO\b|\/\/\s*\w|<!--[\s\S]*?-->/g, category: "Dev Artifact", severity: "low" },
+
+  // LOW: AI Buzzwords
+  { pattern: /\b(leverage|leveraging|leveraged)\b/gi, category: "AI Buzzword", severity: "low" },
+  { pattern: /\b(robust|robustly)\b/gi, category: "AI Buzzword", severity: "low" },
+  { pattern: /\b(streamline|streamlined|streamlining)\b/gi, category: "AI Buzzword", severity: "low" },
+  { pattern: /\b(seamless|seamlessly)\b/gi, category: "AI Buzzword", severity: "low" },
+  { pattern: /\bcutting[\s-]?edge\b/gi, category: "AI Buzzword", severity: "low" },
+  { pattern: /\b(multifaceted)\b/gi, category: "AI Buzzword", severity: "low" },
+  { pattern: /\b(nuanced)\b/gi, category: "AI Buzzword", severity: "low" },
+  { pattern: /\b(pivotal)\b/gi, category: "AI Buzzword", severity: "low" },
+  { pattern: /\b(palpable)\b/gi, category: "AI Buzzword", severity: "low" },
+  { pattern: /\b(intricate|intricately)\b/gi, category: "AI Buzzword", severity: "low" },
+  { pattern: /\b(camaraderie)\b/gi, category: "AI Buzzword", severity: "low" },
+  { pattern: /\b(ever[\s-]?(evolving|changing|growing|expanding|shifting))\b/gi, category: "AI Buzzword", severity: "low" },
+  { pattern: /\b(foster|fostering|fostered)\b/gi, category: "AI Buzzword", severity: "low" },
+  { pattern: /\b(empower|empowering|empowered|empowerment)\b/gi, category: "AI Buzzword", severity: "low" },
+  { pattern: /\b(elevate|elevating|elevated)\b/gi, category: "AI Buzzword", severity: "low" },
+  { pattern: /\b(harness|harnessing|harnessed)\b/gi, category: "AI Buzzword", severity: "low" },
+  { pattern: /\b(synergy|synergies|synergistic)\b/gi, category: "AI Buzzword", severity: "low" },
+  { pattern: /\b(impactful)\b/gi, category: "AI Buzzword", severity: "low" },
+  { pattern: /\b(resonate|resonates|resonating)\b/gi, category: "AI Buzzword", severity: "low" },
+  { pattern: /\b(best\s+practices)\b/gi, category: "AI Buzzword", severity: "low" },
+  { pattern: /\b(actionable\s+insights?)\b/gi, category: "AI Buzzword", severity: "low" },
+  { pattern: /\b(thought\s+leader|thought\s+leadership)\b/gi, category: "AI Buzzword", severity: "low" },
+
+  // LOW: AI Filler
+  { pattern: /\bwhen\s+it\s+comes\s+to\b/gi, category: "AI Filler", severity: "low" },
+  { pattern: /\bthe\s+key\s+to\s+\w+\s+is\b/gi, category: "AI Filler", severity: "low" },
+  { pattern: /\b(it[''\u2019]?s\s+no\s+secret\s+that)\b/gi, category: "AI Filler", severity: "low" },
+  { pattern: /\b(needless\s+to\s+say)\b/gi, category: "AI Filler", severity: "low" },
+  { pattern: /\b(it\s+goes\s+without\s+saying)\b/gi, category: "AI Filler", severity: "low" },
+  { pattern: /\b(do\s+you\s+(know|ever\s+wonder))\b/gi, category: "AI Filler", severity: "low" },
+
+  // LOW: AI Transitions
+  { pattern: /^(Additionally|Furthermore|Moreover|Consequently|Subsequently),/gim, category: "AI Transition", severity: "low" },
+  { pattern: /\b(that\s+said|that\s+being\s+said|having\s+said\s+that)\b/gi, category: "AI Transition", severity: "low" },
+  { pattern: /\b(in\s+conclusion|to\s+summarize|to\s+sum\s+up|all\s+in\s+all)\b/gi, category: "AI Transition", severity: "low" },
+  { pattern: /^(Interestingly|Notably|Importantly|Crucially|Ultimately),/gim, category: "AI Transition", severity: "low" },
+
+  // LOW: Em dash
+  { pattern: /\u2014/g, category: "AI Em Dash", severity: "low" },
+
+  // Emoji & icon tells
+  { pattern: /[\u2705\u2611\u2714\u2716\u274C\u274E]/g, category: "AI Emoji Bullet", severity: "medium" },
+  { pattern: /[0-9]\uFE0F?\u20E3/g, category: "AI Numbered Emoji", severity: "medium" },
+  { pattern: /[\u27A1\u2794\u27A4\u25B8\u25BA\u25B6\u23E9]\uFE0F?/g, category: "AI Arrow Bullet", severity: "medium" },
+  { pattern: /[\uD83D\uDE80\uD83C\uDFAF\uD83D\uDCA1\uD83D\uDD25]/gu, category: "AI Emoji", severity: "low" },
+  { pattern: /[\u2B50\uD83C\uDF1F\u2728]/gu, category: "AI Emoji", severity: "low" },
+  { pattern: /[\uD83D\uDCCA\uD83D\uDCC8\uD83C\uDFC6\uD83D\uDCAA\uD83D\uDC4D]/gu, category: "AI Emoji", severity: "low" },
+  { pattern: /[\uD83D\uDC49\uD83C\uDF89\u26A1\uD83D\uDCA5\uD83D\uDC8E]/gu, category: "AI Emoji", severity: "low" },
+  { pattern: /[\uD83D\uDCDD\uD83D\uDCCC\uD83D\uDCCB\uD83D\uDCE2]/gu, category: "AI Emoji", severity: "low" },
+  { pattern: /[\u26A0\u2757\u2755\u203C\u2049]/gu, category: "AI Emoji", severity: "low" },
+  { pattern: /[\u2022\u25CF\u25CB\u25AA\u25AB\u25FE\u25FD]/g, category: "AI Bullet", severity: "low" },
+];
+
+// ── Sweep ──
+async function sweep() {
+  let text;
+  const btn = document.getElementById("btn");
+
+  if (currentMode === "upload") {
+    if (!loadedFileText) {
+      alert("Please select a file first.");
+      return;
+    }
+    text = loadedFileText;
+  } else if (currentMode === "site") {
+    const url = document.getElementById("site-url").value.trim();
+    if (!url) {
+      document.getElementById("site-url").style.borderColor = "#EF4444";
+      document.getElementById("site-url").focus();
+      setTimeout(() => document.getElementById("site-url").style.borderColor = "", 2000);
+      return;
+    }
+    // Fetch site text via a CORS proxy
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Fetching site\u2026';
+    try {
+      let fetchUrl = url;
+      if (!/^https?:\/\//i.test(fetchUrl)) fetchUrl = "https://" + fetchUrl;
+      const res = await fetch("https://api.allorigins.win/raw?url=" + encodeURIComponent(fetchUrl));
+      if (!res.ok) throw new Error("Could not fetch site (" + res.status + ")");
+      const html = await res.text();
+      // Strip tags, scripts, styles to get visible text
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      doc.querySelectorAll("script,style,noscript,svg,iframe").forEach(el => el.remove());
+      text = doc.body?.textContent || "";
+      text = text.replace(/\s+/g, " ").trim();
+      if (!text) throw new Error("No visible text found on page");
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = "Sweep for Prompts";
+      alert("Could not scan site:\n\n" + err.message);
+      return;
+    }
+    btn.disabled = false;
+    btn.innerHTML = "Sweep for Prompts";
+  } else {
+    text = document.getElementById("input-text").value.trim();
+    if (!text) {
+      const el = document.getElementById("input-text");
+      el.style.borderColor = "#EF4444";
+      el.focus();
+      setTimeout(() => el.style.borderColor = "", 2000);
+      return;
+    }
+  }
+
+
+  // Find all matches
+  const issues = [];
+  RULES.forEach(rule => {
+    let match;
+    const re = new RegExp(rule.pattern.source, rule.pattern.flags);
+    while ((match = re.exec(text)) !== null) {
+      const duplicate = issues.some(iss =>
+        match.index >= iss.start && match.index < iss.end
+      );
+      if (!duplicate) {
+        issues.push({
+          match: match[0],
+          start: match.index,
+          end: match.index + match[0].length,
+          category: rule.category,
+          severity: rule.severity,
+        });
+      }
+    }
+  });
+
+  issues.sort((a, b) => a.start - b.start);
+
+  // Score
+  const highCount = issues.filter(i => i.severity === "high").length;
+  const medCount  = issues.filter(i => i.severity === "medium").length;
+  const lowCount  = issues.filter(i => i.severity === "low").length;
+  let penalty = (highCount * 15) + (medCount * 8) + (lowCount * 3);
+
+  // Cluster detection: 4+ unique categories = extra penalty
+  const uniqueCats = [];
+  issues.forEach(i => { if (uniqueCats.indexOf(i.category) === -1) uniqueCats.push(i.category); });
+  if (uniqueCats.length >= 6) penalty += 20;
+  else if (uniqueCats.length >= 4) penalty += 10;
+
+  // Density: issues per 100 words
+  const wordCount = text.split(/\s+/).length;
+  if (wordCount > 20) {
+    const density = issues.length / (wordCount / 100);
+    if (density > 8) penalty += 15;
+    else if (density > 5) penalty += 8;
+  }
+
+  const score = Math.max(0, Math.min(100, 100 - penalty));
+
+  // Render score
+  const scoreEl = document.getElementById("score-num");
+  scoreEl.textContent = score;
+  scoreEl.style.color = score >= 80 ? "#166534" : score >= 50 ? "#854D0E" : "#991B1B";
+
+  let gradeText, gradeColor, gradeBg;
+  if (score >= 90)      { gradeText = "Clean";                gradeColor = "#166534"; gradeBg = "#DCFCE7"; }
+  else if (score >= 70) { gradeText = "Minor Issues";         gradeColor = "#166534"; gradeBg = "#DCFCE7"; }
+  else if (score >= 50) { gradeText = "Needs Review";         gradeColor = "#854D0E"; gradeBg = "#FEF9C3"; }
+  else                  { gradeText = "Prompt Residue Found";  gradeColor = "#991B1B"; gradeBg = "#FEE2E2"; }
+
+  const gEl = document.getElementById("grade");
+  gEl.textContent = gradeText;
+  gEl.style.background = gradeBg;
+  gEl.style.color = gradeColor;
+
+  // Summary badges
+  const summaryEl = document.getElementById("issue-summary");
+  summaryEl.innerHTML = "";
+  const cats = {};
+  issues.forEach(i => { cats[i.category] = (cats[i.category] || 0) + 1; });
+  if (issues.length === 0) {
+    summaryEl.innerHTML = '<span class="issue-badge" style="background:#DCFCE7;color:#166534;">No issues found</span>';
+  } else {
+    Object.entries(cats).forEach(([cat, count]) => {
+      const sev = issues.find(i => i.category === cat).severity;
+      const bg  = sev === "high" ? "#FEE2E2" : sev === "medium" ? "#FEF9C3" : "#DBEAFE";
+      const col = sev === "high" ? "#991B1B" : sev === "medium" ? "#854D0E" : "#1E40AF";
+      summaryEl.innerHTML += `<span class="issue-badge" style="background:${bg};color:${col};">${cat} <span class="count">${count}</span></span>`;
+    });
+  }
+
+  // Issue rows (all shown — paste is unlimited)
+  const rowsEl = document.getElementById("issue-rows");
+  rowsEl.innerHTML = "";
+  issues.forEach(iss => { rowsEl.innerHTML += issueRowHTML(iss); });
+
+  // Highlighted text (all shown)
+  document.getElementById("highlighted-text").innerHTML = buildHighlightedHTML(text, issues);
+
+  document.getElementById("results").style.display = "block";
+  document.getElementById("results").scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function buildHighlightedHTML(text, issues) {
+  if (issues.length === 0) return esc(text);
+  let html = "", cursor = 0;
+  issues.forEach(iss => {
+    if (iss.start > cursor) html += esc(text.slice(cursor, iss.start));
+    const cls = iss.severity === "high" ? "hl-high" : iss.severity === "medium" ? "hl-medium" : "hl-low";
+    html += `<span class="${cls}" title="${esc(iss.category)}">${esc(iss.match)}</span>`;
+    cursor = iss.end;
+  });
+  if (cursor < text.length) html += esc(text.slice(cursor));
+  return html;
+}
+
+function issueRowHTML(iss) {
+  const col = iss.severity === "high" ? "#EF4444" : iss.severity === "medium" ? "#F59E0B" : "#3B82F6";
+  return `
+    <div class="issue-row">
+      <div class="issue-severity" style="background:${col};"></div>
+      <div>
+        <span class="issue-match">${esc(iss.match)}</span>
+        <div class="issue-category">${iss.category}</div>
+      </div>
+    </div>`;
+}
+
+function esc(str) {
+  return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+</script>
+</body>
+</html>

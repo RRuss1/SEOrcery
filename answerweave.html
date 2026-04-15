@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AnswerWeave — Russell SPC</title>
+<meta name="description" content="Try AnswerWeave — AI Answer Engine Optimization audit. See how visible your business is to ChatGPT, Perplexity, and Gemini. Built by Russell SPC.">
+<link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --linen:#FAF7F0;--navy:#0B1F3A;--navy-mid:#0F2A4E;--gun:#1E1E1E;--gun-light:#444;
+  --cyan:#00C4D9;--cyan-dim:rgba(0,196,217,0.15);--white:#fff;--border:#E5E7EB;
+  --border-navy:rgba(11,31,58,0.12);--muted:#6B7280;--text:#1E1E1E;--font:'Inter',sans-serif;
+  --green:#16A34A;--green-bg:#DCFCE7;--yellow:#CA8A04;--yellow-bg:#FEF9C3;
+  --red:#DC2626;--red-bg:#FEE2E2;--blue:#2563EB;--blue-bg:#DBEAFE;
+  --purple:#7C3AED;--purple-bg:#EDE9FE;--orange:#EA580C;--orange-bg:#FFF7ED;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:17px}
+body{font-family:var(--font);background:var(--linen);min-height:100vh;display:flex;flex-direction:column;align-items:center;color:var(--text)}
+
+/* NAV */
+.demo-nav{width:100%;background:var(--navy);padding:0.9rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(0,0,0,0.15)}
+.demo-nav-left{display:flex;align-items:center;gap:1.25rem}
+.demo-nav-logo{font-weight:800;font-size:0.95rem;color:var(--white);text-decoration:none;letter-spacing:-0.02em}
+.demo-nav-logo span{color:var(--cyan)}
+.demo-nav-divider{width:1px;height:18px;background:rgba(255,255,255,0.15)}
+.nav-links{display:flex;gap:4px}
+.nav-link{font-size:0.78rem;font-weight:500;color:rgba(255,255,255,0.5);text-decoration:none;padding:0.35rem 0.75rem;border-radius:4px;transition:color 0.2s,background 0.2s}
+.nav-link:hover{color:var(--white);background:rgba(255,255,255,0.08)}
+.nav-link.active{color:var(--cyan);background:rgba(0,196,217,0.1)}
+.demo-badge{font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--cyan);border:1px solid rgba(0,196,217,0.3);padding:0.2rem 0.6rem;border-radius:3px}
+
+/* MAIN */
+.main{width:100%;max-width:1100px;padding:2.5rem 2rem 4rem}
+
+/* HERO */
+.demo-hero{text-align:center;margin-bottom:2.5rem}
+.demo-hero h1{font-weight:800;font-size:clamp(1.8rem,4vw,2.8rem);color:var(--navy);letter-spacing:-0.03em;margin-bottom:0.5rem}
+.demo-hero h1 span{color:var(--cyan)}
+.demo-hero .tagline{font-size:0.85rem;font-weight:500;color:var(--cyan);font-style:italic;margin-bottom:0.5rem}
+.demo-hero p{font-size:0.95rem;font-weight:300;color:var(--gun-light);max-width:600px;margin:0 auto;line-height:1.7}
+
+/* CARD BASE */
+.card{background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:2.25rem;margin-bottom:1.5rem;box-shadow:0 4px 24px rgba(11,31,58,0.06)}
+
+/* INPUT */
+.input-card h2{font-weight:700;font-size:1.1rem;color:var(--navy);margin-bottom:0.35rem}
+.input-card .subtitle{font-size:0.82rem;color:var(--muted);margin-bottom:1.75rem}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+.form-group{display:flex;flex-direction:column}
+.form-group.full{grid-column:1/-1}
+.form-group label{font-size:0.72rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--gun-light);margin-bottom:0.4rem}
+.form-group input{padding:0.75rem 1rem;background:var(--linen);border:1px solid var(--border);border-radius:6px;font-family:var(--font);font-size:0.88rem;color:var(--gun);outline:none;transition:border-color 0.2s,box-shadow 0.2s}
+.form-group input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,196,217,0.12)}
+.form-group input::placeholder{color:#B0B0B0}
+.btn-audit{grid-column:1/-1;margin-top:0.5rem;padding:0.9rem 2rem;background:var(--cyan);color:var(--navy);font-family:var(--font);font-size:0.9rem;font-weight:700;letter-spacing:0.03em;border:none;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;box-shadow:0 0 20px rgba(0,229,255,0.25);transition:box-shadow 0.25s,transform 0.2s}
+.btn-audit:hover{box-shadow:0 0 36px rgba(0,229,255,0.55);transform:translateY(-1px)}
+.btn-audit:disabled{opacity:0.6;cursor:not-allowed;transform:none;box-shadow:none}
+.form-note{grid-column:1/-1;text-align:center;font-size:0.72rem;color:var(--muted);margin-top:0.25rem}
+.form-note a{color:var(--cyan)}
+
+/* LOADING */
+.loading-section{display:none;text-align:center}
+.loading-section.active{display:block}
+.loading-title{font-weight:700;font-size:1.1rem;color:var(--navy);margin-bottom:2rem}
+.loading-steps{display:flex;flex-direction:column;gap:1rem;max-width:380px;margin:0 auto}
+.loading-step{display:flex;align-items:center;gap:0.75rem;font-size:0.85rem;color:var(--muted);transition:color 0.3s}
+.loading-step.active{color:var(--navy);font-weight:600}
+.loading-step.done{color:var(--green)}
+.step-icon{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--linen);border:1.5px solid var(--border);transition:all 0.3s}
+.loading-step.active .step-icon{border-color:var(--cyan);background:var(--cyan-dim)}
+.loading-step.done .step-icon{border-color:var(--green);background:var(--green-bg)}
+.step-spinner{width:12px;height:12px;border:2px solid var(--cyan-dim);border-top-color:var(--cyan);border-radius:50%;animation:spin 0.8s linear infinite;display:none}
+.loading-step.active .step-spinner{display:block}
+.step-check{display:none;font-size:0.7rem;color:var(--green)}
+.loading-step.done .step-check{display:block}
+.loading-step.done .step-spinner{display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ERROR */
+.error-msg{display:none;background:var(--red-bg);border:1px solid #FECACA;border-radius:8px;padding:1rem 1.5rem;margin-bottom:2rem;font-size:0.85rem;color:var(--red)}
+.error-msg.active{display:block}
+
+/* RESULTS */
+.results{display:none}
+.results.active{display:block}
+.result-section{opacity:0;transform:translateY(20px);transition:opacity 0.5s ease,transform 0.5s ease}
+.result-section.visible{opacity:1;transform:translateY(0)}
+
+/* SECTION BADGES */
+.section-badge{display:inline-block;font-size:0.62rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:0.2rem 0.65rem;border-radius:3px;margin-bottom:0.75rem}
+.badge-audit{background:var(--cyan-dim);color:var(--cyan)}
+.badge-engines{background:var(--purple-bg);color:var(--purple)}
+.badge-fixes{background:var(--orange-bg);color:var(--orange)}
+.badge-schema{background:var(--blue-bg);color:var(--blue)}
+.badge-content{background:var(--yellow-bg);color:var(--yellow)}
+.badge-monitor{background:var(--green-bg);color:var(--green)}
+.section-title{font-weight:800;font-size:1.3rem;color:var(--navy);letter-spacing:-0.02em;margin-bottom:0.35rem}
+.section-subtitle{font-size:0.85rem;color:var(--muted);margin-bottom:1.5rem;line-height:1.6}
+
+/* SCORE HERO */
+.score-hero{background:var(--navy);border-color:var(--navy);color:var(--white);text-align:center;padding:3rem 2.5rem}
+.score-hero .section-badge{background:rgba(0,196,217,0.15);color:var(--cyan)}
+.score-hero .section-title{color:var(--white)}
+.score-big{display:flex;align-items:baseline;justify-content:center;gap:0.25rem;margin:1.5rem 0 0.5rem}
+.score-num{font-size:5rem;font-weight:800;color:var(--white);line-height:1}
+.score-max{font-size:1.5rem;font-weight:400;color:rgba(255,255,255,0.4)}
+.grade-badge{display:inline-block;padding:0.4rem 1.5rem;border-radius:20px;font-size:1rem;font-weight:800;margin-bottom:1rem}
+.grade-a{background:var(--green-bg);color:var(--green)}
+.grade-b{background:var(--blue-bg);color:var(--blue)}
+.grade-c{background:var(--yellow-bg);color:var(--yellow)}
+.grade-d,.grade-f{background:var(--red-bg);color:var(--red)}
+.score-summary{font-size:0.92rem;color:rgba(255,255,255,0.6);max-width:550px;margin:0 auto;line-height:1.7}
+
+
+/* DIMENSION BARS */
+.dim-bars{display:flex;flex-direction:column;gap:0.85rem}
+.dim-row{display:flex;align-items:center;gap:0.75rem}
+.dim-label{font-size:0.78rem;font-weight:600;color:var(--navy);min-width:130px;text-align:right}
+.dim-track{flex:1;height:20px;background:var(--linen);border-radius:4px;overflow:hidden;position:relative}
+.dim-fill{height:100%;border-radius:4px;transition:width 1.2s cubic-bezier(0.4,0,0.2,1)}
+.dim-score-label{font-size:0.72rem;font-weight:700;color:var(--navy);min-width:50px}
+
+/* ENGINE CARDS */
+.engine-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.engine-card{background:var(--linen);border:1px solid var(--border);border-radius:8px;padding:1.25rem;text-align:center}
+.engine-name{font-weight:700;font-size:0.88rem;color:var(--navy);margin-bottom:0.5rem}
+.engine-status{font-size:0.72rem;font-weight:600;padding:0.15rem 0.5rem;border-radius:20px;display:inline-block;margin-bottom:0.5rem}
+.engine-mentioned{background:var(--green-bg);color:var(--green)}
+.engine-not-mentioned{background:var(--red-bg);color:var(--red)}
+.engine-detail{font-size:0.72rem;color:var(--muted);margin-bottom:0.5rem}
+.engine-excerpt{font-size:0.75rem;color:var(--gun-light);line-height:1.6;font-style:italic;border-top:1px solid var(--border);padding-top:0.5rem;text-align:left}
+
+/* FIXES LIST */
+.fix-list{display:flex;flex-direction:column;gap:0.6rem}
+.fix-item{display:flex;gap:0.75rem;align-items:flex-start;background:var(--linen);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem}
+.fix-num{width:24px;height:24px;border-radius:50%;background:var(--navy);color:var(--white);font-size:0.68rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.fix-text{font-size:0.82rem;color:var(--gun);line-height:1.6}
+
+/* SCHEMA GRID */
+.schema-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem;margin-bottom:1rem}
+.schema-item{text-align:center;padding:1rem;background:var(--linen);border-radius:8px;border:1px solid var(--border)}
+.schema-icon{font-size:1.2rem;margin-bottom:0.35rem}
+.schema-label{font-size:0.72rem;font-weight:600;color:var(--gun-light)}
+
+/* CONTENT ANALYSIS */
+.content-cols{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+.content-box{background:var(--linen);border:1px solid var(--border);border-radius:8px;padding:1.25rem}
+.content-box h4{font-size:0.82rem;font-weight:700;color:var(--navy);margin-bottom:0.6rem}
+.content-box ul{list-style:none;display:flex;flex-direction:column;gap:0.35rem}
+.content-box li{font-size:0.78rem;color:var(--gun-light);padding-left:0.75rem;position:relative;line-height:1.5}
+.content-box li::before{content:'';position:absolute;left:0;top:8px;width:4px;height:4px;border-radius:50%}
+.promo-flag li::before{background:var(--red)}
+.missing-q li::before{background:var(--yellow)}
+
+/* MONITORING PREVIEW */
+.monitor-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+.monitor-box{background:var(--linen);border:1px solid var(--border);border-radius:8px;padding:1.25rem}
+.monitor-box h4{font-size:0.82rem;font-weight:700;color:var(--navy);margin-bottom:0.6rem}
+.trend-badge{display:inline-block;font-size:0.72rem;font-weight:700;padding:0.15rem 0.5rem;border-radius:20px}
+.trend-improving{background:var(--green-bg);color:var(--green)}
+.trend-stable{background:var(--yellow-bg);color:var(--yellow)}
+.trend-declining{background:var(--red-bg);color:var(--red)}
+.comp-row{display:flex;justify-content:space-between;font-size:0.78rem;padding:0.35rem 0;border-bottom:1px solid var(--border)}
+.comp-row:last-child{border:none}
+.comp-name-sm{font-weight:600;color:var(--navy)}
+.comp-detail-sm{color:var(--muted)}
+.prompt-list{list-style:none;display:flex;flex-direction:column;gap:0.35rem}
+.prompt-list li{font-size:0.78rem;color:var(--gun-light);padding:0.4rem 0.6rem;background:var(--white);border:1px solid var(--border);border-radius:4px;font-style:italic}
+
+/* NEW ANALYSIS */
+.new-analysis-wrap{text-align:center;margin-top:1rem;margin-bottom:2rem}
+.btn-new{padding:0.75rem 2rem;background:var(--navy);color:var(--white);font-family:var(--font);font-size:0.85rem;font-weight:600;border:none;border-radius:6px;cursor:pointer;transition:background 0.2s}
+.btn-new:hover{background:var(--navy-mid)}
+
+/* FOOTER */
+.demo-footer{width:100%;background:var(--gun);padding:2rem;text-align:center;margin-top:auto}
+.demo-footer-logo{font-weight:800;font-size:0.9rem;color:var(--white);text-decoration:none}
+.demo-footer-logo span{color:var(--cyan)}
+.demo-footer p{font-size:0.72rem;color:rgba(255,255,255,0.3);margin-top:0.35rem}
+
+/* MOBILE */
+@media(max-width:768px){
+  .demo-nav{padding:0.75rem 1rem;flex-wrap:wrap;gap:0.5rem}
+  .main{padding:1.5rem 1rem 3rem}
+  .card{padding:1.5rem}
+  .form-grid{grid-template-columns:1fr}
+  .engine-grid{grid-template-columns:1fr}
+  .schema-grid{grid-template-columns:1fr 1fr}
+  .content-cols{grid-template-columns:1fr}
+  .monitor-grid{grid-template-columns:1fr}
+  .dim-label{min-width:90px;font-size:0.7rem}
+  .score-num{font-size:3.5rem}
+}
+@media(max-width:500px){
+  .nav-links{display:none}
+  .schema-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<nav class="topnav" style="position:sticky;top:0;z-index:100;display:flex;align-items:center;padding:0.9rem 2rem;background:var(--navy);gap:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.25);">
+  <a href="index.html" style="text-decoration:none;font-weight:800;font-size:1rem;color:#fff;letter-spacing:-0.02em;">Russell <span style="color:var(--cyan);">SPC</span></a>
+  <div style="width:1px;height:20px;background:rgba(255,255,255,0.15);"></div>
+  <div style="display:flex;gap:4px;">
+    <a href="index.html" style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.55);text-decoration:none;padding:5px 12px;border-radius:6px;">Home</a>
+    <a href="score.html" style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.55);text-decoration:none;padding:5px 12px;border-radius:6px;">Score Checker</a>
+    <a href="leads.html" style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.55);text-decoration:none;padding:5px 12px;border-radius:6px;">Lead Radar</a>
+    <a href="rankradar.html" style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.55);text-decoration:none;padding:5px 12px;border-radius:6px;">RankRadar</a>
+    <a href="prompt-sweeper.html" style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.55);text-decoration:none;padding:5px 12px;border-radius:6px;">Prompt Sweeper</a>
+    <a href="answerweave.html" style="font-size:13px;font-weight:500;color:var(--cyan);text-decoration:none;padding:5px 12px;border-radius:6px;background:rgba(0,196,217,0.12);">AnswerWeave</a>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="demo-hero">
+    <h1>Answer<span>Weave</span></h1>
+    <div class="tagline">Your AEO Teammate. You should be the Answer everywhere.</div>
+    <p>See what ChatGPT, Perplexity, and Google Gemini say about your business right now. Get scored across 5 dimensions and find out exactly what to fix to get cited more often.</p>
+  </div>
+
+  <!-- INPUT -->
+  <div class="card input-card" id="input-card">
+    <h2>Run an AEO Audit</h2>
+    <p class="subtitle">Enter a local business to audit. AnswerWeave queries AI engines, scores visibility, and generates a fix plan.</p>
+    <form id="audit-form" class="form-grid" onsubmit="runAudit(event)">
+      <div class="form-group"><label>Brand Name *</label><input type="text" id="f-brand" placeholder="e.g. Cool Florida HVAC" required></div>
+      <div class="form-group"><label>Industry *</label><input type="text" id="f-industry" placeholder="e.g. HVAC" required></div>
+      <div class="form-group"><label>City *</label><input type="text" id="f-city" placeholder="e.g. Boca Raton" required></div>
+      <div class="form-group"><label>State</label><input type="text" id="f-state" placeholder="e.g. FL"></div>
+      <div class="form-group"><label>Website Domain</label><input type="text" id="f-domain" placeholder="e.g. coolfloridahvac.com"></div>
+      <div class="form-group"><label>Target Keywords</label><input type="text" id="f-keywords" placeholder="e.g. AC repair, HVAC maintenance"></div>
+      <button type="submit" class="btn-audit" id="btn-audit">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        Run AEO Audit
+      </button>
+      <p class="form-note">Full 6-dimension AI visibility audit.</p>
+    </form>
+  </div>
+
+  <!-- LOADING -->
+  <div class="card loading-section" id="loading-section">
+    <div class="loading-title">Running AEO Audit...</div>
+    <div class="loading-steps">
+      <div class="loading-step" id="ls-1"><div class="step-icon"><div class="step-spinner"></div><span class="step-check">&#10003;</span></div>Querying ChatGPT...</div>
+      <div class="loading-step" id="ls-2"><div class="step-icon"><div class="step-spinner"></div><span class="step-check">&#10003;</span></div>Querying Perplexity...</div>
+      <div class="loading-step" id="ls-3"><div class="step-icon"><div class="step-spinner"></div><span class="step-check">&#10003;</span></div>Querying Google Gemini...</div>
+      <div class="loading-step" id="ls-4"><div class="step-icon"><div class="step-spinner"></div><span class="step-check">&#10003;</span></div>Analyzing schema &amp; freshness...</div>
+      <div class="loading-step" id="ls-5"><div class="step-icon"><div class="step-spinner"></div><span class="step-check">&#10003;</span></div>Scoring content readiness...</div>
+      <div class="loading-step" id="ls-6"><div class="step-icon"><div class="step-spinner"></div><span class="step-check">&#10003;</span></div>Generating fix plan...</div>
+    </div>
+  </div>
+
+  <div class="error-msg" id="error-msg"></div>
+
+  <!-- RESULTS -->
+  <div class="results" id="results">
+
+    <!-- SCORE HERO (ungated) -->
+    <div class="card result-section score-hero" id="sec-score">
+      <div class="section-badge badge-audit">AEO Audit Complete</div>
+      <h3 class="section-title" id="score-brand"></h3>
+      <div class="score-big"><span class="score-num" id="score-num">--</span><span class="score-max">/100</span></div>
+      <div class="grade-badge" id="grade-badge">--</div>
+      <p class="score-summary" id="score-summary"></p>
+    </div>
+
+    <!-- PHASE 1: DIMENSIONS (gated) -->
+    <div class="card result-section" id="sec-dims">
+        <div class="section-badge badge-audit">Phase 1 &mdash; 5-Dimension Breakdown</div>
+        <h3 class="section-title">Visibility Scorecard</h3>
+        <p class="section-subtitle">How your business scores across the 5 key AEO dimensions.</p>
+        <div class="dim-bars" id="dim-bars"></div>
+    </div>
+
+    <!-- PHASE 1: ENGINE RESULTS (gated) -->
+    <div class="card result-section" id="sec-engines">
+        <div class="section-badge badge-engines">Phase 1 &mdash; Engine Results</div>
+        <h3 class="section-title">What AI Engines Say About You</h3>
+        <p class="section-subtitle">Real responses from ChatGPT, Perplexity, and Google Gemini for your brand queries.</p>
+        <div class="engine-grid" id="engine-grid"></div>
+    </div>
+
+    <!-- PHASE 1: TOP FIXES (gated) -->
+    <div class="card result-section" id="sec-fixes">
+        <div class="section-badge badge-fixes">Phase 1 &mdash; Action Plan</div>
+        <h3 class="section-title">Top Fixes</h3>
+        <p class="section-subtitle">Prioritized actions to improve your AEO score, most impactful first.</p>
+        <div class="fix-list" id="fix-list"></div>
+    </div>
+
+    <!-- PHASE 1: SCHEMA (gated) -->
+    <div class="card result-section" id="sec-schema">
+        <div class="section-badge badge-schema">Phase 1 &mdash; Schema Audit</div>
+        <h3 class="section-title">Structured Data Analysis</h3>
+        <p class="section-subtitle">JSON-LD schema presence and quality on your site.</p>
+        <div class="schema-grid" id="schema-grid"></div>
+        <div id="schema-issues"></div>
+    </div>
+
+    <!-- PHASE 3: CONTENT ANALYSIS (gated) -->
+    <div class="card result-section" id="sec-content">
+        <div class="section-badge badge-content">Phase 3 &mdash; Content Optimizer</div>
+        <h3 class="section-title">Content Readiness</h3>
+        <p class="section-subtitle">How well your content is structured for AI extraction and citation.</p>
+        <div style="text-align:center;margin-bottom:1.25rem">
+          <span style="font-size:2.5rem;font-weight:800;color:var(--navy)" id="content-score-num">--</span>
+          <span style="font-size:1rem;color:var(--muted)">/100</span>
+        </div>
+        <div class="content-cols" id="content-cols"></div>
+    </div>
+
+    <!-- PHASE 2: MONITORING (gated) -->
+    <div class="card result-section" id="sec-monitor">
+        <div class="section-badge badge-monitor">Phase 2 &mdash; Ongoing Monitoring</div>
+        <h3 class="section-title">Monitoring &amp; Tracking</h3>
+        <p class="section-subtitle">Track your AI visibility over time. Detect drops, monitor competitors, get weekly alerts.</p>
+        <div class="monitor-grid" id="monitor-grid"></div>
+    </div>
+
+    <div class="new-analysis-wrap">
+      <button class="btn-new" onclick="resetAudit()">Run New Audit</button>
+    </div>
+  </div>
+</div>
+
+<div class="demo-footer">
+  <a href="index.html" class="demo-footer-logo">Russell <span>SPC</span> LLC</a>
+  <p>Systems. Products. Consulting.</p>
+</div>
+
+<script>
+const WORKER_URL = 'https://answerweave-worker.rruss7997.workers.dev';
+
+function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+// Loading animation
+function animateLoading(){
+  var steps=[1,2,3,4,5,6],i=0;
+  return setInterval(function(){
+    if(i>0){document.getElementById('ls-'+i).classList.remove('active');document.getElementById('ls-'+i).classList.add('done')}
+    i++;if(i<=6)document.getElementById('ls-'+i).classList.add('active');
+  },2200);
+}
+function resetLoadingSteps(){for(var i=1;i<=6;i++){var el=document.getElementById('ls-'+i);el.classList.remove('active','done')}}
+
+// Color helpers
+function dimColor(score,max){var p=score/max;if(p>=0.7)return'var(--green)';if(p>=0.4)return'var(--yellow)';return'var(--red)'}
+function gradeClass(g){return'grade-'+g.toLowerCase()}
+function sentimentColor(s){if(s==='positive')return'var(--green)';if(s==='negative')return'var(--red)';return'var(--muted)'}
+function trendClass(t){return'trend-'+t}
+
+// Renderers
+function renderScore(r,brand){
+  document.getElementById('score-brand').textContent='AEO Audit: '+brand;
+  document.getElementById('score-num').textContent=r.composite_score;
+  var gb=document.getElementById('grade-badge');
+  gb.textContent='Grade '+r.grade;
+  gb.className='grade-badge '+gradeClass(r.grade);
+  document.getElementById('score-summary').textContent=r.summary;
+}
+
+function renderDimensions(d){
+  var dims=[
+    {key:'presence',label:'Presence'},
+    {key:'sentiment',label:'Sentiment'},
+    {key:'citation_position',label:'Citation Position'},
+    {key:'schema_quality',label:'Schema Quality'},
+    {key:'freshness',label:'Freshness'}
+  ];
+  var html='';
+  dims.forEach(function(dim){
+    var s=d[dim.key];if(!s)return;
+    var pct=(s.score/s.max*100).toFixed(0);
+    html+='<div class="dim-row"><div class="dim-label">'+dim.label+'</div><div class="dim-track"><div class="dim-fill" style="width:0;background:'+dimColor(s.score,s.max)+'" data-width="'+pct+'%"></div></div><div class="dim-score-label">'+s.score+'/'+s.max+'</div></div>';
+  });
+  document.getElementById('dim-bars').innerHTML=html;
+  setTimeout(function(){document.querySelectorAll('.dim-fill').forEach(function(b){b.style.width=b.dataset.width})},200);
+}
+
+function renderEngines(er){
+  var engines=[{key:'chatgpt',name:'ChatGPT'},{key:'perplexity',name:'Perplexity'},{key:'gemini',name:'Google Gemini'}];
+  document.getElementById('engine-grid').innerHTML=engines.map(function(e){
+    var d=er[e.key];if(!d)return'';
+    var mentioned=d.mentioned;
+    return '<div class="engine-card"><div class="engine-name">'+e.name+'</div>'
+      +'<div class="engine-status '+(mentioned?'engine-mentioned':'engine-not-mentioned')+'">'+(mentioned?'Mentioned':'Not Mentioned')+'</div>'
+      +(mentioned?'<div class="engine-detail">Position: #'+(d.position||'?')+' &middot; Sentiment: <span style="color:'+sentimentColor(d.sentiment)+';font-weight:600">'+(d.sentiment||'n/a')+'</span></div>':'')
+      +(d.excerpt?'<div class="engine-excerpt">"'+esc(d.excerpt)+'"</div>':'')
+      +'</div>';
+  }).join('');
+}
+
+function renderFixes(fixes){
+  document.getElementById('fix-list').innerHTML=(fixes||[]).map(function(f,i){
+    return '<div class="fix-item"><div class="fix-num">'+(i+1)+'</div><div class="fix-text">'+esc(f)+'</div></div>';
+  }).join('');
+}
+
+function renderSchema(sa){
+  var items=[
+    {key:'organization_schema',label:'Organization'},
+    {key:'local_business_schema',label:'LocalBusiness'},
+    {key:'faq_schema',label:'FAQPage'},
+    {key:'review_schema',label:'Review'}
+  ];
+  document.getElementById('schema-grid').innerHTML=items.map(function(it){
+    var present=sa[it.key];
+    return '<div class="schema-item"><div class="schema-icon">'+(present?'<span style="color:var(--green)">&#10003;</span>':'<span style="color:var(--red)">&#10007;</span>')+'</div><div class="schema-label">'+it.label+'</div></div>';
+  }).join('');
+  if(sa.issues&&sa.issues.length){
+    document.getElementById('schema-issues').innerHTML='<div style="margin-top:1rem"><div style="font-size:0.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem">Issues Found</div>'
+      +sa.issues.map(function(is){return '<div style="font-size:0.78rem;color:var(--gun-light);padding:0.25rem 0;border-bottom:1px solid var(--border)">'+esc(is)+'</div>'}).join('')+'</div>';
+  }
+}
+
+function renderContent(ca){
+  document.getElementById('content-score-num').textContent=ca.answer_readiness_score||'--';
+  var html='';
+  if(ca.promotional_flags&&ca.promotional_flags.length){
+    html+='<div class="content-box"><h4 style="color:var(--red)">Promotional Language Flags</h4><ul class="promo-flag">'+ca.promotional_flags.map(function(f){return '<li>'+esc(f)+'</li>'}).join('')+'</ul></div>';
+  }
+  if(ca.missing_answer_blocks&&ca.missing_answer_blocks.length){
+    html+='<div class="content-box"><h4 style="color:var(--yellow)">Missing Answer Blocks</h4><ul class="missing-q">'+ca.missing_answer_blocks.map(function(q){return '<li>'+esc(q)+'</li>'}).join('')+'</ul></div>';
+  }
+  document.getElementById('content-cols').innerHTML=html;
+}
+
+function renderMonitoring(mp){
+  var html='';
+  // Trend + competitors
+  html+='<div class="monitor-box"><h4>Trend Projection</h4><span class="trend-badge '+trendClass(mp.trend_direction)+'">'+esc(mp.trend_direction)+'</span><p style="font-size:0.78rem;color:var(--gun-light);margin-top:0.5rem;line-height:1.6">'+esc(mp.trend_detail)+'</p>';
+  if(mp.competitor_mentions&&mp.competitor_mentions.length){
+    html+='<h4 style="margin-top:1rem">Competitor AI Presence</h4>';
+    mp.competitor_mentions.forEach(function(c){
+      html+='<div class="comp-row"><span class="comp-name-sm">'+esc(c.name)+'</span><span class="comp-detail-sm">'+c.engines_present+'/3 engines &middot; avg #'+c.avg_position.toFixed(1)+'</span></div>';
+    });
+  }
+  html+='</div>';
+  // Prompts to monitor
+  if(mp.recommended_prompts&&mp.recommended_prompts.length){
+    html+='<div class="monitor-box"><h4>Recommended Prompts to Monitor</h4><ul class="prompt-list">'+mp.recommended_prompts.map(function(p){return '<li>'+esc(p)+'</li>'}).join('')+'</ul></div>';
+  }
+  document.getElementById('monitor-grid').innerHTML=html;
+}
+
+function revealResults(){
+  var secs=document.querySelectorAll('.result-section');
+  secs.forEach(function(s,i){setTimeout(function(){s.classList.add('visible')},i*200)});
+}
+
+// Main
+async function runAudit(e){
+  e.preventDefault();
+  var brand=document.getElementById('f-brand').value.trim();
+  var industry=document.getElementById('f-industry').value.trim();
+  var city=document.getElementById('f-city').value.trim();
+  var state=document.getElementById('f-state').value.trim();
+  var domain=document.getElementById('f-domain').value.trim();
+  var keywords=document.getElementById('f-keywords').value.trim();
+  if(!brand||!industry||!city)return;
+
+  document.getElementById('input-card').style.display='none';
+  document.getElementById('results').classList.remove('active');
+  document.getElementById('error-msg').classList.remove('active');
+  resetLoadingSteps();
+  document.getElementById('loading-section').classList.add('active');
+  var loadInt=animateLoading();
+
+  try{
+    var res=await fetch(WORKER_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({brand:brand,industry:industry,city:city,state:state||undefined,domain:domain||undefined,keywords:keywords?keywords.split(',').map(function(k){return k.trim()}).filter(Boolean):undefined})
+    });
+    var data=await res.json();
+    clearInterval(loadInt);
+    for(var i=1;i<=6;i++){document.getElementById('ls-'+i).classList.remove('active');document.getElementById('ls-'+i).classList.add('done')}
+    if(!data.success||!data.report)throw new Error(data.error||'Audit failed');
+    await new Promise(function(r){setTimeout(r,600)});
+    document.getElementById('loading-section').classList.remove('active');
+    var rpt=data.report;
+    renderScore(rpt,brand);
+    if(rpt.dimensions)renderDimensions(rpt.dimensions);
+    if(rpt.engine_results)renderEngines(rpt.engine_results);
+    if(rpt.top_fixes)renderFixes(rpt.top_fixes);
+    if(rpt.schema_analysis)renderSchema(rpt.schema_analysis);
+    if(rpt.content_analysis)renderContent(rpt.content_analysis);
+    if(rpt.monitoring_preview)renderMonitoring(rpt.monitoring_preview);
+    document.getElementById('results').classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+    setTimeout(revealResults,100);
+  }catch(err){
+    clearInterval(loadInt);
+    document.getElementById('loading-section').classList.remove('active');
+    document.getElementById('input-card').style.display='block';
+    var errEl=document.getElementById('error-msg');
+    errEl.textContent=err.message||'Something went wrong. Please try again.';
+    errEl.classList.add('active');
+  }
+}
+
+function resetAudit(){
+  document.getElementById('results').classList.remove('active');
+  document.querySelectorAll('.result-section').forEach(function(s){s.classList.remove('visible')});
+  document.getElementById('input-card').style.display='block';
+  document.getElementById('error-msg').classList.remove('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>
