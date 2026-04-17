@@ -344,6 +344,66 @@ body{font-family:var(--font);background:var(--linen);min-height:100vh;display:fl
         <div class="monitor-grid" id="monitor-grid"></div>
     </div>
 
+    <!-- POWER LOOM -->
+    <div class="card result-section" id="sec-loom" style="display:none;border:2px solid var(--cyan);">
+      <div class="section-badge" style="background:var(--cyan);color:var(--navy);">Power Loom</div>
+      <h3 class="section-title">Generate Fix Package</h3>
+      <p class="section-subtitle">Power Loom crawls the site, detects issues across all 5 AEO dimensions, and generates a downloadable fix package with patches, documentation, and validation steps.</p>
+
+      <div id="loom-config" style="margin:1.25rem 0;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+          <div>
+            <label style="display:block;font-size:0.65rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Priority threshold</label>
+            <select id="loom-threshold" style="width:100%;height:36px;border:1.5px solid var(--border);border-radius:6px;padding:0 10px;font-size:0.82rem;font-family:var(--font);">
+              <option value="low">Low (all fixes)</option>
+              <option value="medium" selected>Medium (3+ impact)</option>
+              <option value="high">High (6+ impact only)</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:0.65rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Max fixes</label>
+            <select id="loom-limit" style="width:100%;height:36px;border:1.5px solid var(--border);border-radius:6px;padding:0 10px;font-size:0.82rem;font-family:var(--font);">
+              <option value="5">5 fixes</option>
+              <option value="10" selected>10 fixes</option>
+              <option value="15">15 fixes</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <button id="loom-btn" onclick="runLoom()" style="width:100%;height:48px;background:var(--cyan);color:var(--navy);border:none;border-radius:8px;font-size:0.88rem;font-weight:700;font-family:var(--font);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 0 20px rgba(0,229,255,0.25);transition:box-shadow 0.2s;">
+        Generate Fix Package
+      </button>
+
+      <div id="loom-progress" style="display:none;margin-top:1rem;">
+        <div style="font-size:0.78rem;color:var(--muted);margin-bottom:0.5rem;" id="loom-status">Crawling site pages...</div>
+        <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;">
+          <div id="loom-bar" style="height:100%;background:var(--cyan);width:0%;transition:width 0.5s;border-radius:3px;"></div>
+        </div>
+      </div>
+
+      <div id="loom-results" style="display:none;margin-top:1.25rem;">
+        <div style="background:var(--navy);border-radius:8px;padding:1.25rem;color:#fff;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+            <div>
+              <div style="font-size:0.7rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.08em;">Projected Score Gain</div>
+              <div style="font-size:2rem;font-weight:800;color:var(--cyan);" id="loom-gain">--</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:0.7rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.08em;">New Grade</div>
+              <div style="font-size:2rem;font-weight:800;" id="loom-grade">--</div>
+            </div>
+          </div>
+          <div style="font-size:0.78rem;color:rgba(255,255,255,0.6);margin-bottom:1rem;" id="loom-summary"></div>
+          <div id="loom-fix-list" style="display:flex;flex-direction:column;gap:0.5rem;"></div>
+        </div>
+
+        <button id="loom-download-btn" onclick="downloadLoomPackage()" style="width:100%;height:44px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:0.82rem;font-weight:600;font-family:var(--font);cursor:pointer;margin-top:0.75rem;display:flex;align-items:center;justify-content:center;gap:8px;">
+          Download Fix Package (.zip)
+        </button>
+      </div>
+    </div>
+
     <div class="new-analysis-wrap">
       <button class="btn-new" onclick="resetAudit()">Run New Audit</button>
     </div>
@@ -531,6 +591,12 @@ async function runAudit(e){
     if(rpt.schema_analysis)renderSchema(rpt.schema_analysis);
     if(rpt.content_analysis)renderContent(rpt.content_analysis);
     if(rpt.monitoring_preview)renderMonitoring(rpt.monitoring_preview);
+
+    // Store audit for Power Loom
+    window._lastAuditReport = rpt;
+    window._lastAuditInputs = { brand:brand, domain:domain, city:city, state:state, industry:industry };
+    showLoomSection();
+
     document.getElementById('results').classList.add('active');
     window.scrollTo({top:0,behavior:'smooth'});
     setTimeout(revealResults,100);
@@ -549,7 +615,156 @@ function resetAudit(){
   document.querySelectorAll('.result-section').forEach(function(s){s.classList.remove('visible')});
   document.getElementById('input-card').style.display='block';
   document.getElementById('error-msg').classList.remove('active');
+  document.getElementById('sec-loom').style.display='none';
+  document.getElementById('loom-results').style.display='none';
+  document.getElementById('loom-progress').style.display='none';
+  window._loomZip = null;
   window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ============================================================================
+// Power Loom
+// ============================================================================
+
+// Store the last audit report for Loom
+window._lastAuditReport = null;
+window._lastAuditInputs = null;
+window._loomZip = null;
+
+// Hook into the existing audit completion to show Loom section
+var _origRenderScore = window.renderScore || function(){};
+var _origComplete = null;
+
+// Show Loom section after audit renders
+function showLoomSection() {
+  var el = document.getElementById('sec-loom');
+  if (el && window._lastAuditReport) {
+    el.style.display = 'block';
+    setTimeout(function(){ el.classList.add('visible'); }, 100);
+  }
+}
+
+async function runLoom() {
+  var btn = document.getElementById('loom-btn');
+  var report = window._lastAuditReport;
+  var inputs = window._lastAuditInputs;
+
+  if (!report || !inputs) {
+    alert('Run an audit first.');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner" style="width:16px;height:16px;border:2px solid rgba(11,31,58,0.2);border-top-color:#0B1F3A;border-radius:50%;animation:spin 0.65s linear infinite;"></span> Generating...';
+  document.getElementById('loom-progress').style.display = 'block';
+  document.getElementById('loom-results').style.display = 'none';
+
+  // Animate progress bar
+  var bar = document.getElementById('loom-bar');
+  var status = document.getElementById('loom-status');
+  bar.style.width = '10%';
+  status.textContent = 'Crawling site pages...';
+
+  var progressInterval = setInterval(function(){
+    var w = parseFloat(bar.style.width);
+    if (w < 85) {
+      bar.style.width = (w + Math.random() * 8) + '%';
+      if (w > 20) status.textContent = 'Running fix builders...';
+      if (w > 40) status.textContent = 'Generating patches...';
+      if (w > 60) status.textContent = 'Building fix documentation...';
+      if (w > 75) status.textContent = 'Packaging zip...';
+    }
+  }, 1500);
+
+  try {
+    var audit = Object.assign({}, report, {
+      domain: inputs.domain || (inputs.brand.replace(/\s+/g, '').toLowerCase() + '.com'),
+      brand: inputs.brand,
+      city: inputs.city,
+      state: inputs.state || '',
+      industry: inputs.industry
+    });
+
+    var res = await fetch(WORKER_URL + '/loom/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        audit: audit,
+        site_type: 'static',
+        fix_limit: parseInt(document.getElementById('loom-limit').value),
+        priority_threshold: document.getElementById('loom-threshold').value
+      })
+    });
+
+    var data = await res.json();
+    clearInterval(progressInterval);
+    bar.style.width = '100%';
+    status.textContent = 'Complete';
+
+    if (data.error) throw new Error(data.error);
+    if (data.fix_count === 0) {
+      status.textContent = 'No fixes found above threshold.';
+      btn.disabled = false;
+      btn.innerHTML = 'Generate Fix Package';
+      return;
+    }
+
+    // Store for download
+    if (data.zip_base64) {
+      var binaryStr = atob(data.zip_base64);
+      var bytes = new Uint8Array(binaryStr.length);
+      for (var i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+      window._loomZip = new Blob([bytes], { type: 'application/zip' });
+    }
+
+    // Render results
+    document.getElementById('loom-gain').textContent = '+' + data.projected_score_gain;
+    document.getElementById('loom-grade').textContent = data.projected_new_grade || '--';
+    document.getElementById('loom-grade').style.color = gradeColor(data.projected_new_grade);
+    document.getElementById('loom-summary').textContent = data.fix_count + ' fixes, ~' + data.total_estimated_minutes + ' minutes total, projected new score: ' + data.projected_new_score + '/100';
+
+    var listEl = document.getElementById('loom-fix-list');
+    listEl.innerHTML = '';
+    (data.fixes_summary || []).forEach(function(f) {
+      var priorityColor = f.priority === 'high' ? '#EF4444' : f.priority === 'medium' ? '#F59E0B' : '#6B7280';
+      listEl.innerHTML += '<div style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.75rem;background:rgba(255,255,255,0.05);border-radius:6px;">'
+        + '<span style="font-size:0.7rem;font-weight:700;color:var(--cyan);width:42px;flex-shrink:0;">' + f.id + '</span>'
+        + '<span style="flex:1;font-size:0.78rem;color:rgba(255,255,255,0.8);">' + esc(f.title) + '</span>'
+        + '<span style="font-size:0.7rem;font-weight:600;color:' + priorityColor + ';">' + f.priority + '</span>'
+        + '<span style="font-size:0.72rem;font-weight:600;color:var(--cyan);">+' + f.impact + '</span>'
+        + '</div>';
+    });
+
+    document.getElementById('loom-results').style.display = 'block';
+    document.getElementById('loom-results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  } catch (err) {
+    clearInterval(progressInterval);
+    status.textContent = 'Error: ' + err.message;
+    bar.style.width = '100%';
+    bar.style.background = '#EF4444';
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = 'Generate Fix Package';
+}
+
+function gradeColor(grade) {
+  if (grade === 'A') return '#22C55E';
+  if (grade === 'B') return '#00C4D9';
+  if (grade === 'C') return '#F59E0B';
+  return '#EF4444';
+}
+
+function downloadLoomPackage() {
+  if (!window._loomZip) {
+    alert('No package available. Generate one first.');
+    return;
+  }
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(window._loomZip);
+  a.download = 'answerweave-fix-package-' + new Date().toISOString().slice(0,10) + '.zip';
+  a.click();
 }
 </script>
 </body>
