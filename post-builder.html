@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auto Post Builder - Russell SPC</title>
+<link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- ffmpeg.wasm for in-browser reel assembly -->
+<script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.6/dist/umd/ffmpeg.js"></script>
+<script src="https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js"></script>
+<style>
+:root {
+  --linen: #FAF7F0;
+  --navy: #0B1F3A;
+  --navy-mid: #0F2A4E;
+  --cyan: #00C4D9;
+  --cyan-dim: rgba(0,196,217,0.15);
+  --gun: #1E1E1E;
+  --gun-light: #444;
+  --white: #fff;
+  --border: #E5E7EB;
+  --border-navy: rgba(11,31,58,0.12);
+  --green: #22C55E;
+  --red: #EF4444;
+  --amber: #F5A623;
+  --font: 'Inter', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body {
+  font-family: var(--font);
+  background: var(--linen);
+  color: var(--gun);
+  min-height: 100vh;
+}
+
+/* Nav */
+.topnav {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center;
+  padding: 0.9rem 2rem;
+  background: var(--navy);
+  gap: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+.topnav a.logo {
+  text-decoration: none; font-weight: 800; font-size: 1rem;
+  color: #fff; letter-spacing: -0.02em;
+}
+.topnav a.logo span { color: var(--cyan); }
+.topnav .divider { width: 1px; height: 20px; background: rgba(255,255,255,0.15); }
+.topnav .links { display: flex; gap: 4px; }
+.topnav .links a {
+  font-size: 13px; font-weight: 500;
+  color: rgba(255,255,255,0.55);
+  text-decoration: none; padding: 5px 12px; border-radius: 6px;
+}
+.topnav .links a:hover { color: #fff; background: rgba(255,255,255,0.08); }
+.topnav .links a.active { color: var(--cyan); background: rgba(0,196,217,0.12); }
+
+/* App layout */
+.app-shell {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  max-width: 1400px;
+  margin: 1.5rem auto;
+  padding: 0 1.5rem;
+  gap: 1.25rem;
+  min-height: calc(100vh - 80px);
+}
+
+/* Sidebar */
+.sidebar {
+  display: flex; flex-direction: column; gap: 1rem;
+}
+.sidebar-card {
+  background: var(--white);
+  border: 1px solid var(--border-navy);
+  border-radius: 10px;
+  padding: 1.25rem;
+}
+.sidebar-card h3 {
+  font-size: 0.7rem; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--gun-light); margin-bottom: 0.75rem;
+}
+
+/* Form elements */
+.form-group { margin-bottom: 0.85rem; }
+.form-group label {
+  display: block; font-size: 0.68rem; font-weight: 600;
+  color: var(--gun-light); text-transform: uppercase;
+  letter-spacing: 0.06em; margin-bottom: 4px;
+}
+.form-group select,
+.form-group input,
+.form-group textarea {
+  width: 100%; border: 1.5px solid var(--border); border-radius: 6px;
+  padding: 8px 10px; font-size: 0.82rem; font-family: var(--font);
+  color: var(--gun); background: var(--white);
+  transition: border-color 0.2s;
+}
+.form-group select:focus,
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none; border-color: var(--cyan);
+  box-shadow: 0 0 0 3px rgba(0,196,217,0.12);
+}
+.form-group textarea { resize: vertical; min-height: 60px; }
+
+/* Tone pills */
+.tone-row { display: flex; flex-wrap: wrap; gap: 5px; }
+.tone-pill {
+  font-size: 0.72rem; font-weight: 500;
+  padding: 4px 12px; border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: var(--white); color: var(--gun-light);
+  cursor: pointer; transition: all 0.15s;
+}
+.tone-pill:hover { border-color: var(--cyan); color: var(--navy); }
+.tone-pill.active { background: var(--navy); color: var(--white); border-color: var(--navy); }
+
+/* Voice cards */
+.voice-list { display: flex; flex-direction: column; gap: 5px; }
+.voice-card {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: 6px;
+  border: 1.5px solid var(--border);
+  cursor: pointer; transition: all 0.15s;
+}
+.voice-card:hover { border-color: var(--cyan); }
+.voice-card.active { border-color: var(--cyan); background: var(--cyan-dim); }
+.voice-emoji { font-size: 1.1rem; flex-shrink: 0; }
+.voice-info { flex: 1; }
+.voice-name { font-size: 0.78rem; font-weight: 600; color: var(--navy); }
+.voice-desc { font-size: 0.65rem; color: var(--gun-light); }
+
+/* Connection status */
+.status-row {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.72rem; color: var(--gun-light);
+}
+.status-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+}
+.status-dot.ok { background: var(--green); }
+.status-dot.off { background: var(--red); }
+.status-dot.pending { background: var(--amber); }
+
+/* Big buttons */
+.btn-generate {
+  width: 100%; height: 48px;
+  background: var(--cyan); color: var(--navy);
+  border: none; border-radius: 8px;
+  font-size: 0.88rem; font-weight: 700; font-family: var(--font);
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 0 20px rgba(0,229,255,0.25);
+  transition: box-shadow 0.2s, transform 0.1s;
+  letter-spacing: 0.02em;
+}
+.btn-generate:hover:not(:disabled) {
+  box-shadow: 0 0 36px rgba(0,229,255,0.5); transform: translateY(-1px);
+}
+.btn-generate:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-post {
+  width: 100%; height: 44px;
+  background: var(--navy); color: var(--white);
+  border: none; border-radius: 8px;
+  font-size: 0.82rem; font-weight: 600; font-family: var(--font);
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: background 0.2s;
+}
+.btn-post:hover:not(:disabled) { background: var(--navy-mid); }
+.btn-post:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn-download {
+  width: 100%; height: 38px;
+  background: transparent; color: var(--navy);
+  border: 1.5px solid var(--border-navy); border-radius: 8px;
+  font-size: 0.78rem; font-weight: 500; font-family: var(--font);
+  cursor: pointer; transition: border-color 0.2s;
+}
+.btn-download:hover:not(:disabled) { border-color: var(--cyan); color: var(--cyan); }
+.btn-download:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Status bar */
+.status-bar {
+  background: var(--navy); color: rgba(255,255,255,0.5);
+  padding: 6px 12px; border-radius: 6px;
+  font-size: 0.72rem; font-family: var(--font);
+  margin-bottom: 0.5rem; text-align: center;
+  min-height: 30px; display: flex; align-items: center; justify-content: center;
+}
+.status-bar.active { color: var(--cyan); }
+.status-bar.error { color: var(--red); }
+.status-bar.done { color: var(--green); }
+
+/* Main content */
+.main-col {
+  display: flex; flex-direction: column; gap: 1.25rem;
+}
+
+/* Content cards */
+.content-card {
+  background: var(--white);
+  border: 1px solid var(--border-navy);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.content-card-head {
+  background: var(--navy);
+  padding: 0.75rem 1.25rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.content-card-head h3 {
+  font-size: 0.82rem; font-weight: 600; color: var(--white);
+}
+.content-card-head .platform-icon {
+  font-size: 0.85rem;
+}
+.copy-btn {
+  font-size: 0.65rem; font-weight: 600;
+  padding: 3px 10px; border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: transparent; color: rgba(255,255,255,0.6);
+  cursor: pointer; font-family: var(--font);
+  transition: all 0.15s;
+}
+.copy-btn:hover { color: var(--cyan); border-color: var(--cyan); }
+.content-card-body {
+  padding: 1.25rem;
+}
+.content-card-body textarea {
+  width: 100%; border: 1.5px solid var(--border);
+  border-radius: 6px; padding: 10px 12px;
+  font-size: 0.82rem; font-family: var(--font);
+  color: var(--gun); line-height: 1.6;
+  resize: vertical; min-height: 100px;
+  background: var(--linen);
+}
+.content-card-body textarea:focus {
+  outline: none; border-color: var(--cyan);
+}
+.card-meta {
+  font-size: 0.65rem; color: var(--gun-light);
+  margin-top: 6px; font-style: italic;
+}
+
+/* Reel preview */
+.reel-wrap {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--gun);
+  min-height: 200px;
+  border-radius: 8px;
+  position: relative;
+}
+.reel-wrap video {
+  max-width: 100%; max-height: 360px;
+  border-radius: 6px;
+  display: none;
+}
+.reel-placeholder {
+  color: rgba(255,255,255,0.2);
+  font-size: 0.82rem; font-weight: 500;
+  text-align: center;
+}
+
+/* Image preview */
+.img-preview {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--gun);
+  min-height: 160px;
+  border-radius: 8px;
+}
+.img-preview img {
+  max-width: 100%; max-height: 280px;
+  border-radius: 6px;
+  display: none;
+}
+.img-placeholder {
+  color: rgba(255,255,255,0.2);
+  font-size: 0.82rem;
+}
+
+/* Post results */
+.post-results {
+  display: none;
+}
+.post-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0;
+  font-size: 0.82rem;
+  border-bottom: 1px solid var(--border);
+}
+.post-row:last-child { border-bottom: none; }
+.post-platform { font-weight: 600; color: var(--navy); flex: 1; }
+.post-status { font-weight: 600; font-size: 0.78rem; }
+.post-status.ok { color: var(--green); }
+.post-status.fail { color: var(--red); }
+
+/* Credential modal */
+.cred-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(11,31,58,0.5);
+  z-index: 200;
+  align-items: center; justify-content: center;
+}
+.cred-overlay.open { display: flex; }
+.cred-modal {
+  background: var(--white);
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 480px; width: 90%;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+}
+.cred-modal h2 {
+  font-size: 1.1rem; font-weight: 700;
+  color: var(--navy); margin-bottom: 1rem;
+}
+.cred-modal .form-group { margin-bottom: 1rem; }
+.cred-modal .btn-save {
+  width: 100%; height: 42px;
+  background: var(--cyan); color: var(--navy);
+  border: none; border-radius: 6px;
+  font-size: 0.85rem; font-weight: 600; font-family: var(--font);
+  cursor: pointer; margin-top: 0.5rem;
+}
+
+/* Spinner */
+.spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(11,31,58,0.2);
+  border-top-color: var(--navy);
+  border-radius: 50%;
+  animation: spin 0.65s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Responsive */
+@media (max-width: 800px) {
+  .app-shell { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="logo" href="index.html">Russell <span>SPC</span></a>
+  <div class="divider"></div>
+  <div class="links">
+    <a href="index.html">Home</a>
+    <a href="inhouse.html">In House</a>
+    <a href="post-builder.html" class="active">Post Builder</a>
+  </div>
+</nav>
+
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <!-- Status -->
+    <div class="status-bar" id="status">Ready</div>
+
+    <!-- Connections -->
+    <div class="sidebar-card">
+      <h3>Connections</h3>
+      <div class="status-row" style="margin-bottom:6px;">
+        <span class="status-dot off" id="worker-dot"></span>
+        <span>Worker</span>
+        <span style="margin-left:auto;font-size:0.65rem;color:var(--cyan);cursor:pointer;" onclick="openCreds()">configure</span>
+      </div>
+      <div class="status-row">
+        <span class="status-dot off" id="zernio-dot"></span>
+        <span>Zernio</span>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="sidebar-card">
+      <h3>Content</h3>
+      <div class="form-group">
+        <label>Topic</label>
+        <select id="topic">
+          <option value="whitelabel">White-label partnerships</option>
+          <option value="vibecoding">AI-assisted / vibe coding</option>
+          <option value="consulting">Strategic consulting</option>
+          <option value="casestudy">Case study / result</option>
+          <option value="tip">Expert tip</option>
+          <option value="cta">CTA / inquiry post</option>
+          <option value="credibility">Credibility / authority</option>
+          <option value="behind">Behind the scenes</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Tone</label>
+        <div class="tone-row">
+          <span class="tone-pill active" data-tone="confident" onclick="setTone(this)">Confident</span>
+          <span class="tone-pill" data-tone="conversational" onclick="setTone(this)">Casual</span>
+          <span class="tone-pill" data-tone="sharp" onclick="setTone(this)">Sharp</span>
+          <span class="tone-pill" data-tone="bold" onclick="setTone(this)">Bold</span>
+          <span class="tone-pill" data-tone="educational" onclick="setTone(this)">Educational</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Hook (optional)</label>
+        <textarea id="hook" placeholder="Leave blank for AI-generated hook"></textarea>
+      </div>
+    </div>
+
+    <!-- Voice -->
+    <div class="sidebar-card">
+      <h3>Voice</h3>
+      <div class="voice-list" id="voice-list">
+        <div class="voice-card active" data-voice="VOICE_ID_1" onclick="setVoice(this)">
+          <span class="voice-emoji">&#127919;</span>
+          <div class="voice-info">
+            <div class="voice-name">Authority</div>
+            <div class="voice-desc">Deep, measured, confident</div>
+          </div>
+        </div>
+        <div class="voice-card" data-voice="VOICE_ID_2" onclick="setVoice(this)">
+          <span class="voice-emoji">&#128296;</span>
+          <div class="voice-info">
+            <div class="voice-name">Builder</div>
+            <div class="voice-desc">Warm, conversational</div>
+          </div>
+        </div>
+        <div class="voice-card" data-voice="VOICE_ID_3" onclick="setVoice(this)">
+          <span class="voice-emoji">&#9889;</span>
+          <div class="voice-info">
+            <div class="voice-name">Sharp</div>
+            <div class="voice-desc">Crisp, professional</div>
+          </div>
+        </div>
+        <div class="voice-card" data-voice="VOICE_ID_4" onclick="setVoice(this)">
+          <span class="voice-emoji">&#10024;</span>
+          <div class="voice-info">
+            <div class="voice-name">Friendly</div>
+            <div class="voice-desc">Warm, energetic</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <button class="btn-generate" id="gen-btn" onclick="generateAndAttack()">
+      &#9889; Generate + Attack
+    </button>
+    <button class="btn-post" id="post-btn" onclick="postAll()" disabled>
+      &#128640; Post All
+    </button>
+    <button class="btn-download" id="dl-btn" onclick="downloadAll()" disabled>
+      &#8595; Download All
+    </button>
+
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-col">
+
+    <!-- LinkedIn -->
+    <div class="content-card">
+      <div class="content-card-head">
+        <h3>LinkedIn</h3>
+        <button class="copy-btn" onclick="copyField('linkedin-copy')">Copy</button>
+      </div>
+      <div class="content-card-body">
+        <textarea id="linkedin-copy" placeholder="LinkedIn post will appear here after generation..."></textarea>
+        <div class="card-meta" id="linkedin-meta"></div>
+      </div>
+    </div>
+
+    <!-- Audiogram -->
+    <div class="content-card">
+      <div class="content-card-head">
+        <h3>Audiogram Script</h3>
+        <button class="copy-btn" onclick="copyField('audio-script')">Copy</button>
+      </div>
+      <div class="content-card-body">
+        <textarea id="audio-script" placeholder="Voiceover script (45-60 sec spoken) will appear here..."></textarea>
+        <div class="card-meta" id="audio-meta"></div>
+        <label style="display:block;font-size:0.68rem;font-weight:600;color:var(--gun-light);text-transform:uppercase;letter-spacing:0.06em;margin-top:12px;margin-bottom:4px;">Instagram / Facebook Caption</label>
+        <textarea id="ig-caption" placeholder="Instagram/Facebook caption will appear here..." style="min-height:70px;"></textarea>
+      </div>
+    </div>
+
+    <!-- Reel Preview -->
+    <div class="content-card">
+      <div class="content-card-head">
+        <h3>Reel Preview</h3>
+      </div>
+      <div class="content-card-body">
+        <div class="reel-wrap">
+          <video id="reel-preview" controls></video>
+          <div class="reel-placeholder" id="reel-placeholder">Reel will appear here after generation</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Image Preview -->
+    <div class="content-card">
+      <div class="content-card-head">
+        <h3>Generated Image</h3>
+      </div>
+      <div class="content-card-body">
+        <div class="img-preview">
+          <img id="img-preview" alt="Generated image">
+          <div class="img-placeholder" id="img-placeholder">Image will appear here after generation</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Google Business -->
+    <div class="content-card">
+      <div class="content-card-head">
+        <h3>Google Business</h3>
+        <button class="copy-btn" onclick="copyField('gbp-copy')">Copy</button>
+      </div>
+      <div class="content-card-body">
+        <textarea id="gbp-copy" placeholder="Google Business post will appear here..."></textarea>
+        <div class="card-meta" id="gbp-meta"></div>
+      </div>
+    </div>
+
+    <!-- Post Results -->
+    <div class="content-card" id="post-results-card" style="display:none;">
+      <div class="content-card-head">
+        <h3>Post Results</h3>
+      </div>
+      <div class="content-card-body">
+        <div id="post-results">
+          <div class="post-row"><span class="post-platform">LinkedIn</span><span class="post-status" id="res-linkedin">--</span></div>
+          <div class="post-row"><span class="post-platform">Instagram</span><span class="post-status" id="res-instagram">--</span></div>
+          <div class="post-row"><span class="post-platform">Facebook</span><span class="post-status" id="res-facebook">--</span></div>
+          <div class="post-row"><span class="post-platform">Google Business</span><span class="post-status" id="res-google">--</span></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Credential Modal -->
+<div class="cred-overlay" id="cred-overlay">
+  <div class="cred-modal">
+    <h2>Configure Connections</h2>
+    <div class="form-group">
+      <label>Worker URL</label>
+      <input type="url" id="cred-worker" placeholder="https://russellspc-social.xxx.workers.dev">
+    </div>
+    <div class="form-group">
+      <label>Zernio API Key</label>
+      <input type="password" id="cred-zernio" placeholder="Your Zernio API key">
+    </div>
+    <button class="btn-save" onclick="saveCreds()">Save and Close</button>
+  </div>
+</div>
+
+<script>
+// ================================================================
+//  Auto Post Builder - UI Shell
+//  Worker + Zernio wiring: TODO after worker deployment
+// ================================================================
+
+// ── State ──
+let currentTone = 'confident';
+let currentVoice = 'VOICE_ID_1';
+window.CURRENT_COPY = null;
+
+// ── Voice palette (update with real ElevenLabs IDs) ──
+const VOICE_PALETTE = [
+  { id: 'VOICE_ID_1', name: 'Authority', emoji: '\u{1F3AF}', desc: 'Deep, measured, confident' },
+  { id: 'VOICE_ID_2', name: 'Builder',   emoji: '\u{1F528}', desc: 'Warm, conversational' },
+  { id: 'VOICE_ID_3', name: 'Sharp',     emoji: '\u26A1',     desc: 'Crisp, professional' },
+  { id: 'VOICE_ID_4', name: 'Friendly',  emoji: '\u2728',     desc: 'Warm, energetic' },
+];
+
+// ── Tone pills ──
+function setTone(el) {
+  document.querySelectorAll('.tone-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  currentTone = el.dataset.tone;
+}
+
+// ── Voice selection ──
+function setVoice(el) {
+  document.querySelectorAll('.voice-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  currentVoice = el.dataset.voice;
+}
+
+// ── Status ──
+function setStatus(msg, type) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status-bar' + (type ? ' ' + type : '');
+}
+
+// ── Credential modal ──
+function openCreds() {
+  document.getElementById('cred-worker').value = localStorage.getItem('pb_worker_url') || '';
+  document.getElementById('cred-zernio').value = localStorage.getItem('pb_zernio_key') || '';
+  document.getElementById('cred-overlay').classList.add('open');
+}
+
+function saveCreds() {
+  const worker = document.getElementById('cred-worker').value.trim();
+  const zernio = document.getElementById('cred-zernio').value.trim();
+  if (worker) localStorage.setItem('pb_worker_url', worker);
+  if (zernio) localStorage.setItem('pb_zernio_key', zernio);
+  document.getElementById('cred-overlay').classList.remove('open');
+  checkConnections();
+}
+
+// Click outside modal to close
+document.getElementById('cred-overlay').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('open');
+});
+
+// ── Connection check ──
+function checkConnections() {
+  const hasWorker = !!localStorage.getItem('pb_worker_url');
+  const hasZernio = !!localStorage.getItem('pb_zernio_key');
+  document.getElementById('worker-dot').className = 'status-dot ' + (hasWorker ? 'ok' : 'off');
+  document.getElementById('zernio-dot').className = 'status-dot ' + (hasZernio ? 'ok' : 'off');
+}
+
+// ── Worker helper ──
+function getWorkerUrl() {
+  return localStorage.getItem('pb_worker_url') || '';
+}
+
+function getZernioKey() {
+  return localStorage.getItem('pb_zernio_key') || '';
+}
+
+async function workerPost(path, body) {
+  const base = getWorkerUrl();
+  if (!base) throw new Error('Worker URL not configured. Click "configure" in sidebar.');
+  const res = await fetch(base + path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error('Worker error: ' + err);
+  }
+  return res;
+}
+
+// ── Copy to clipboard ──
+function copyField(id) {
+  const el = document.getElementById(id);
+  navigator.clipboard.writeText(el.value);
+  const btn = el.closest('.content-card').querySelector('.copy-btn');
+  const orig = btn.textContent;
+  btn.textContent = 'Copied';
+  setTimeout(() => { btn.textContent = orig; }, 1500);
+}
+
+// ── Render helpers ──
+function renderCopy(copy) {
+  window.CURRENT_COPY = copy;
+  document.getElementById('linkedin-copy').value = copy.linkedin?.copy || '';
+  document.getElementById('linkedin-meta').textContent = copy.linkedin?.posting_note || '';
+  document.getElementById('audio-script').value = copy.audiogram?.script || '';
+  document.getElementById('audio-meta').textContent = copy.audiogram?.voice_note || '';
+  document.getElementById('ig-caption').value = copy.audiogram?.caption || '';
+  document.getElementById('gbp-copy').value = copy.google?.copy || '';
+  document.getElementById('gbp-meta').textContent = copy.google?.posting_note || '';
+}
+
+function renderImage(b64) {
+  const img = document.getElementById('img-preview');
+  img.src = 'data:image/png;base64,' + b64;
+  img.style.display = 'block';
+  document.getElementById('img-placeholder').style.display = 'none';
+}
+
+// ── Main pipeline (wired to Generate + Attack) ──
+async function generateAndAttack() {
+  const btn = document.getElementById('gen-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Generating...';
+
+  try {
+    // Step 1: Copy
+    setStatus('Writing copy...', 'active');
+    const copyRes = await workerPost('/generate-copy', {
+      topic: document.getElementById('topic').value,
+      tone: currentTone,
+      hook: document.getElementById('hook').value.trim(),
+    });
+    const copy = JSON.parse(await copyRes.text());
+    renderCopy(copy);
+
+    // Step 2: Image
+    setStatus('Generating image...', 'active');
+    const imgRes = await workerPost('/generate-image', {
+      prompt: (copy.audiogram?.script || '').substring(0, 400),
+      brandColor: '#00C4D9',
+    });
+    const { image: imageB64 } = await imgRes.json();
+    window.IMAGE_B64 = imageB64;
+    renderImage(imageB64);
+
+    // Step 3: Audio
+    setStatus('Generating voiceover...', 'active');
+    const audRes = await workerPost('/generate-audio', {
+      script: copy.audiogram?.script || '',
+      voiceId: currentVoice,
+    });
+    const { audio: audioB64 } = await audRes.json();
+    window.AUDIO_B64 = audioB64;
+
+    // Step 4: Reel assembly
+    setStatus('Assembling reel (ffmpeg)...', 'active');
+    await combineIntoReel(imageB64, audioB64);
+
+    // Step 5: Store image blob for GBP
+    const imgBytes = Uint8Array.from(atob(imageB64), c => c.charCodeAt(0));
+    window.IMAGE_BLOB = new Blob([imgBytes], { type: 'image/png' });
+
+    setStatus('Ready to review and post', 'done');
+    document.getElementById('post-btn').disabled = false;
+    document.getElementById('dl-btn').disabled = false;
+
+  } catch (e) {
+    setStatus('Error: ' + e.message, 'error');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '&#9889; Generate + Attack';
+}
+
+// ── ffmpeg reel assembly ──
+async function combineIntoReel(imageB64, audioB64) {
+  const { FFmpeg } = window.FFmpegWASM;
+  const { fetchFile, toBlobURL } = window.FFmpegUtil;
+
+  if (!window._ffmpeg) {
+    setStatus('Loading ffmpeg (first time only)...', 'active');
+    window._ffmpeg = new FFmpeg();
+    await window._ffmpeg.load({
+      coreURL: await toBlobURL(
+        'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js',
+        'text/javascript'
+      ),
+      wasmURL: await toBlobURL(
+        'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.wasm',
+        'application/wasm'
+      ),
+    });
+  }
+
+  const ffmpeg = window._ffmpeg;
+  const imgBytes = Uint8Array.from(atob(imageB64), c => c.charCodeAt(0));
+  const audBytes = Uint8Array.from(atob(audioB64), c => c.charCodeAt(0));
+
+  await ffmpeg.writeFile('image.png', imgBytes);
+  await ffmpeg.writeFile('audio.mp3', audBytes);
+
+  await ffmpeg.exec([
+    '-loop', '1', '-i', 'image.png', '-i', 'audio.mp3',
+    '-c:v', 'libx264', '-tune', 'stillimage',
+    '-c:a', 'aac', '-b:a', '192k',
+    '-pix_fmt', 'yuv420p',
+    '-vf', 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2',
+    '-shortest', 'reel.mp4',
+  ]);
+
+  const data = await ffmpeg.readFile('reel.mp4');
+  await ffmpeg.deleteFile('image.png');
+  await ffmpeg.deleteFile('audio.mp3');
+  await ffmpeg.deleteFile('reel.mp4');
+
+  const blob = new Blob([data.buffer], { type: 'video/mp4' });
+  window.REEL_BLOB = blob;
+  window.REEL_URL = URL.createObjectURL(blob);
+
+  const video = document.getElementById('reel-preview');
+  video.src = window.REEL_URL;
+  video.style.display = 'block';
+  document.getElementById('reel-placeholder').style.display = 'none';
+}
+
+// ── Post All ──
+async function postAll() {
+  const btn = document.getElementById('post-btn');
+  btn.disabled = true;
+  const copy = window.CURRENT_COPY;
+  if (!copy) { setStatus('Generate content first', 'error'); btn.disabled = false; return; }
+
+  document.getElementById('post-results-card').style.display = 'block';
+  setStatus('Posting to all platforms...', 'active');
+
+  try {
+    // TODO: Wire Zernio API calls here
+    // For now, show placeholder
+    setStatus('Zernio posting not yet wired', 'error');
+    ['linkedin','instagram','facebook','google'].forEach(p => {
+      document.getElementById('res-' + p).textContent = 'Not wired yet';
+      document.getElementById('res-' + p).className = 'post-status fail';
+    });
+  } catch (e) {
+    setStatus('Post error: ' + e.message, 'error');
+  }
+
+  btn.disabled = false;
+}
+
+// ── Download All ──
+function downloadAll() {
+  const slug = new Date().toISOString().slice(0, 10);
+
+  if (window.REEL_URL) {
+    const a = document.createElement('a');
+    a.href = window.REEL_URL;
+    a.download = 'russellspc-reel-' + slug + '.mp4';
+    a.click();
+  }
+
+  if (window.IMAGE_B64) {
+    const a = document.createElement('a');
+    a.href = 'data:image/png;base64,' + window.IMAGE_B64;
+    a.download = 'russellspc-image-' + slug + '.png';
+    a.click();
+  }
+
+  const copy = window.CURRENT_COPY;
+  if (copy) {
+    const text = [
+      'Russell SPC - Content Pack ' + new Date().toLocaleDateString(),
+      '='.repeat(50), '',
+      'LINKEDIN POST', '-'.repeat(40),
+      copy.linkedin?.copy || '', '',
+      'AUDIOGRAM SCRIPT', '-'.repeat(40),
+      copy.audiogram?.script || '', '',
+      'INSTAGRAM / FACEBOOK CAPTION', '-'.repeat(40),
+      copy.audiogram?.caption || '', '',
+      'GOOGLE BUSINESS', '-'.repeat(40),
+      copy.google?.copy || '',
+    ].join('\n');
+    const blob = new Blob([text], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'russellspc-posts-' + slug + '.txt';
+    a.click();
+  }
+}
+
+// ── Init ──
+checkConnections();
+</script>
+</body>
+</html>
