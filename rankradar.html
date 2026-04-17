@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <style>
 :root {
   --linen: #FAF7F0;
@@ -697,10 +698,15 @@ body {
         <label>Website (optional)</label>
         <input type="text" id="f-website" placeholder="e.g. sunriseplumbing.com">
       </div>
+      <div style="display:flex;justify-content:center;margin:0.75rem 0;">
+        <div class="cf-turnstile" data-sitekey="0x4AAAAAAC_Gmm55fCnu-mlq"></div>
+      </div>
+
       <button type="submit" class="btn-analyze" id="btn-analyze">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
         Analyze Market
       </button>
+      <p style="text-align:center;font-size:0.7rem;color:var(--muted);margin-top:0.5rem;">5 analyses per hour per IP</p>
     </form>
   </div>
 
@@ -1029,6 +1035,14 @@ async function runAnalysis(e) {
 
   if (!businessName || !industry || !location) return;
 
+  const turnstileToken = window.turnstile && window.turnstile.getResponse
+    ? window.turnstile.getResponse()
+    : (document.querySelector('[name="cf-turnstile-response"]') || {}).value;
+  if (!turnstileToken) {
+    alert("Please complete the verification challenge above before submitting.");
+    return;
+  }
+
   // Show loading
   document.getElementById('input-card').style.display = 'none';
   document.getElementById('results').classList.remove('active');
@@ -1041,7 +1055,7 @@ async function runAnalysis(e) {
     const res = await fetch(WORKER_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ businessName, industry, location, website: website || undefined }),
+      body: JSON.stringify({ businessName, industry, location, website: website || undefined, turnstileToken }),
     });
 
     const data = await res.json();
@@ -1077,6 +1091,8 @@ async function runAnalysis(e) {
     // Staggered reveal
     setTimeout(revealResults, 100);
 
+    if (window.turnstile) window.turnstile.reset();
+
   } catch (err) {
     clearInterval(loadingInterval);
     document.getElementById('loading-section').classList.remove('active');
@@ -1084,6 +1100,7 @@ async function runAnalysis(e) {
     const errEl = document.getElementById('error-msg');
     errEl.textContent = err.message || 'Something went wrong. Please try again.';
     errEl.classList.add('active');
+    if (window.turnstile) window.turnstile.reset();
   }
 }
 

@@ -2,7 +2,44 @@
 //  SEOrcery — Cloudflare Worker
 //  Handles all API calls so your Google key stays secret.
 //  Deploy: wrangler deploy  (from the /worker folder)
+//  Secrets: GOOGLE_API_KEY, TURNSTILE_SECRET
 // ============================================================
+
+// ── Cloudflare Turnstile verification ──
+async function verifyTurnstile(token, secret, ip) {
+  if (!token) return { success: false, error: "No Turnstile token" };
+  if (!secret) return { success: false, error: "Turnstile not configured" };
+  const form = new FormData();
+  form.append("secret", secret);
+  form.append("response", token);
+  if (ip) form.append("remoteip", ip);
+  const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+    method: "POST",
+    body: form,
+  });
+  return res.json();
+}
+
+// ── In-memory IP rate limiter: 5 requests per IP per hour ──
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
+const ipHits = new Map();
+function checkRateLimit(ip) {
+  if (!ip) return { allowed: true };
+  const now = Date.now();
+  const hits = (ipHits.get(ip) || []).filter(t => now - t < RATE_LIMIT_WINDOW_MS);
+  if (hits.length >= RATE_LIMIT_MAX) {
+    return { allowed: false, resetMs: RATE_LIMIT_WINDOW_MS - (now - hits[0]) };
+  }
+  hits.push(now);
+  ipHits.set(ip, hits);
+  if (ipHits.size > 10000) {
+    for (const [k, v] of ipHits) {
+      if (v.filter(t => now - t < RATE_LIMIT_WINDOW_MS).length === 0) ipHits.delete(k);
+    }
+  }
+  return { allowed: true };
+}
 
 export default {
   async fetch(request, env) {
@@ -26,6 +63,26 @@ export default {
       return new Response(
         JSON.stringify({ status: "SEOrcery Worker running ✓" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ── Rate limit + Turnstile gate for all actions ──
+    const ip = request.headers.get("CF-Connecting-IP") || request.headers.get("X-Forwarded-For") || "";
+    const rate = checkRateLimit(ip);
+    if (!rate.allowed) {
+      const mins = Math.ceil(rate.resetMs / 60000);
+      return new Response(
+        JSON.stringify({ error: `Rate limit exceeded. Try again in ${mins} minute${mins !== 1 ? "s" : ""}.` }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const turnstileToken = url.searchParams.get("turnstileToken");
+    const tsResult = await verifyTurnstile(turnstileToken, env.TURNSTILE_SECRET, ip);
+    if (!tsResult.success) {
+      return new Response(
+        JSON.stringify({ error: "Verification failed. Please refresh and try again." }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 

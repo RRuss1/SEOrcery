@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <style>
 :root {
   --linen: #FAF7F0;
@@ -492,9 +493,14 @@ body {
         <p class="hint">Include https:// for accurate results</p>
       </div>
 
+      <div style="display:flex;justify-content:center;margin:0.75rem 0;">
+        <div class="cf-turnstile" data-sitekey="0x4AAAAAAC_Gmm55fCnu-mlq"></div>
+      </div>
+
       <button class="btn-analyze" id="btn" onclick="runScore()">
         Generate my Score
       </button>
+      <p style="text-align:center;font-size:0.7rem;color:var(--muted);margin-top:0.5rem;">5 free scores per hour per IP</p>
     </div>
 
     <div class="results-panel" id="results">
@@ -655,12 +661,20 @@ async function runScore() {
   if (!biz)  { shake("biz");  return; }
   if (!city) { shake("city"); return; }
 
+  const turnstileToken = window.turnstile && window.turnstile.getResponse
+    ? window.turnstile.getResponse()
+    : (document.querySelector('[name="cf-turnstile-response"]') || {}).value;
+  if (!turnstileToken) {
+    alert("Please complete the verification challenge above before submitting.");
+    return;
+  }
+
   const btn = document.getElementById("btn");
   btn.disabled = true;
   btn.innerHTML = `<span class="spinner"></span> Analyzing\u2026`;
 
   try {
-    const params = new URLSearchParams({ action: "score", bizName: biz, city });
+    const params = new URLSearchParams({ action: "score", bizName: biz, city, turnstileToken });
     if (siteUrl) params.set("siteUrl", siteUrl);
 
     const res  = await fetch(`${WORKER_URL}?${params}`);
@@ -678,11 +692,13 @@ async function runScore() {
       "Make sure the Worker is deployed and running.\n\n" +
       err.message
     );
+    if (window.turnstile) window.turnstile.reset();
     return;
   }
 
   btn.innerHTML = "Re-analyze";
   btn.disabled  = false;
+  if (window.turnstile) window.turnstile.reset();
 }
 
 function renderResults(d, biz, city) {
