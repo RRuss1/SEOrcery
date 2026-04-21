@@ -751,10 +751,14 @@ async function runLoom() {
     document.getElementById('loom-gain').textContent = '+' + data.projected_score_gain;
     document.getElementById('loom-grade').textContent = data.projected_new_grade || '--';
     document.getElementById('loom-grade').style.color = gradeColor(data.projected_new_grade);
+    console.log('Power Loom raw response:', data);
     var summary = data.fix_count + ' fixes, ~' + data.total_estimated_minutes + ' minutes total, projected new score: ' + data.projected_new_score + '/100';
     if (data.crawled_pages && data.crawled_pages.length) {
       summary += ' | Crawled ' + data.crawled_pages.length + ' page(s): ' + data.crawled_pages.join(', ');
+    } else {
+      summary += ' | Crawl info missing from response (old worker or frontend cache)';
     }
+    if (data.site_type) summary += ' | Site type: ' + data.site_type;
     document.getElementById('loom-summary').textContent = summary;
 
     var listEl = document.getElementById('loom-fix-list');
