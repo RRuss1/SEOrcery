@@ -601,6 +601,25 @@ async function runAudit(e){
     if(rpt.content_analysis)renderContent(rpt.content_analysis);
     if(rpt.monitoring_preview)renderMonitoring(rpt.monitoring_preview);
 
+    // Show site crawl status under the schema section so the user can verify
+    var crawl=rpt._siteCrawl;
+    if(crawl){
+      var schemaSec=document.getElementById('sec-schema');
+      if(schemaSec){
+        var existing=schemaSec.querySelector('.crawl-note');
+        if(existing)existing.remove();
+        var note=document.createElement('div');
+        note.className='crawl-note';
+        note.style.cssText='margin-top:1rem;padding:0.75rem 1rem;background:var(--linen);border-radius:6px;font-size:0.78rem;color:var(--gun-light);border-left:3px solid var(--cyan);';
+        if(crawl.crawled){
+          note.innerHTML='<strong>Site crawled just now.</strong> Pages fetched: '+crawl.pagesFetched+' ('+(crawl.urls||[]).map(function(u){return u.replace(/^https?:\/\/[^\/]+/,'')||'/'}).join(', ')+'). Schema results above reflect the live site.';
+        }else{
+          note.innerHTML='<strong>Site crawl skipped.</strong> '+esc(crawl.error||'No domain provided')+'. Schema analysis is engine-inferred only.';
+        }
+        schemaSec.appendChild(note);
+      }
+    }
+
     // Store audit for Power Loom
     window._lastAuditReport = rpt;
     window._lastAuditInputs = { brand:brand, domain:domain, city:city, state:state, industry:industry };
@@ -732,7 +751,11 @@ async function runLoom() {
     document.getElementById('loom-gain').textContent = '+' + data.projected_score_gain;
     document.getElementById('loom-grade').textContent = data.projected_new_grade || '--';
     document.getElementById('loom-grade').style.color = gradeColor(data.projected_new_grade);
-    document.getElementById('loom-summary').textContent = data.fix_count + ' fixes, ~' + data.total_estimated_minutes + ' minutes total, projected new score: ' + data.projected_new_score + '/100';
+    var summary = data.fix_count + ' fixes, ~' + data.total_estimated_minutes + ' minutes total, projected new score: ' + data.projected_new_score + '/100';
+    if (data.crawled_pages && data.crawled_pages.length) {
+      summary += ' | Crawled ' + data.crawled_pages.length + ' page(s): ' + data.crawled_pages.join(', ');
+    }
+    document.getElementById('loom-summary').textContent = summary;
 
     var listEl = document.getElementById('loom-fix-list');
     listEl.innerHTML = '';
