@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt Sweeper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --linen: #FAF7F0;
+  --navy: #0B1F3A;
+  --navy-mid: #0F2A4E;
+  --cyan: #00C4D9;
+  --cyan-dim: rgba(0,196,217,0.15);
+  --gun: #1E1E1E;
+  --gun-light: #444;
+  --white: #fff;
+  --border: #E5E7EB;
+  --border-navy: rgba(11,31,58,0.12);
+  --red: #EF4444;
+  --amber: #F59E0B;
+  --green: #22C55E;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--linen);
+  color: var(--gun);
+  min-height: 100vh;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+}
+
+/* Title bar */
+.titlebar {
+  -webkit-app-region: drag;
+  background: var(--navy);
+  padding: 0.6rem 1rem;
+  display: flex; align-items: center; gap: 0.75rem;
+  border-bottom: 1px solid rgba(0,0,0,0.2);
+}
+.title-logo {
+  font-weight: 800; font-size: 0.88rem;
+  color: #fff; letter-spacing: -0.02em;
+}
+.title-logo span { color: var(--cyan); }
+.title-tagline {
+  font-size: 0.68rem; color: rgba(255,255,255,0.5);
+  font-style: italic;
+}
+
+/* Tabs */
+.tabs {
+  display: flex; gap: 2px;
+  background: var(--navy);
+  padding: 0 1rem;
+  border-bottom: 1px solid var(--border-navy);
+  -webkit-app-region: no-drag;
+}
+.tab {
+  padding: 0.5rem 1rem;
+  font-size: 0.78rem; font-weight: 500;
+  color: rgba(255,255,255,0.5);
+  background: transparent; border: none;
+  cursor: pointer; font-family: inherit;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+.tab:hover { color: #fff; }
+.tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+
+/* Content */
+.content {
+  flex: 1;
+  padding: 1.25rem;
+  overflow-y: auto;
+}
+
+/* Scan view */
+.scan-area {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 1rem;
+  height: 100%;
+}
+.scan-input-col {
+  display: flex; flex-direction: column; gap: 0.75rem;
+}
+.scan-input {
+  flex: 1;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  font-family: 'Menlo', 'Monaco', monospace;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--gun);
+  background: var(--white);
+  resize: none;
+  min-height: 300px;
+}
+.scan-input:focus { outline: none; border-color: var(--cyan); }
+
+.scan-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.btn {
+  padding: 0.55rem 1.1rem;
+  font-size: 0.78rem; font-weight: 600;
+  font-family: inherit;
+  border: none; border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-primary {
+  background: var(--cyan); color: var(--navy);
+  box-shadow: 0 0 16px rgba(0,229,255,0.2);
+}
+.btn-primary:hover { box-shadow: 0 0 28px rgba(0,229,255,0.4); }
+.btn-secondary {
+  background: var(--navy); color: #fff;
+}
+.btn-secondary:hover { background: var(--navy-mid); }
+.btn-outline {
+  background: transparent; color: var(--navy);
+  border: 1.5px solid var(--border-navy);
+}
+.btn-outline:hover { border-color: var(--cyan); color: var(--cyan); }
+
+/* Results panel */
+.results-panel {
+  background: var(--white);
+  border: 1px solid var(--border-navy);
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex; flex-direction: column;
+  gap: 0.75rem;
+  overflow-y: auto;
+}
+.score-row {
+  display: flex; align-items: baseline; gap: 0.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+.score-num { font-size: 2rem; font-weight: 800; color: var(--navy); }
+.score-max { font-size: 0.85rem; color: var(--gun-light); }
+.score-label {
+  font-size: 0.65rem; color: var(--gun-light);
+  margin-left: auto;
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+.grade-pill {
+  display: inline-block;
+  padding: 2px 10px; border-radius: 12px;
+  font-size: 0.7rem; font-weight: 700;
+}
+.grade-clean { background: rgba(34,197,94,0.15); color: #166534; }
+.grade-minor { background: rgba(245,158,11,0.15); color: #92400E; }
+.grade-review { background: rgba(245,158,11,0.2); color: #854D0E; }
+.grade-found { background: rgba(239,68,68,0.15); color: #991B1B; }
+
+.stat-row {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.5rem;
+}
+.stat {
+  text-align: center;
+  padding: 0.5rem;
+  background: var(--linen);
+  border-radius: 6px;
+}
+.stat-val { font-size: 1rem; font-weight: 700; color: var(--navy); }
+.stat-key { font-size: 0.6rem; color: var(--gun-light); text-transform: uppercase; letter-spacing: 0.06em; }
+.stat.high .stat-val { color: var(--red); }
+.stat.med  .stat-val { color: var(--amber); }
+.stat.low  .stat-val { color: var(--gun-light); }
+
+.issue-list {
+  display: flex; flex-direction: column; gap: 6px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.issue-item {
+  padding: 6px 8px;
+  background: var(--linen);
+  border-radius: 4px;
+  font-size: 0.72rem;
+  border-left: 3px solid var(--border);
+}
+.issue-item.high { border-left-color: var(--red); }
+.issue-item.medium { border-left-color: var(--amber); }
+.issue-item.low { border-left-color: var(--border); }
+.issue-cat {
+  font-weight: 600; color: var(--navy);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.issue-match {
+  color: var(--gun); margin-top: 2px;
+  font-family: 'Menlo', monospace;
+  font-size: 0.7rem;
+  word-break: break-word;
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--gun-light);
+  padding: 2rem 1rem;
+  font-size: 0.82rem;
+}
+.empty-emoji { font-size: 2rem; margin-bottom: 0.5rem; }
+
+/* Slop Hog indicator */
+.slop-hog-status {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--navy);
+  border-radius: 6px;
+  color: rgba(255,255,255,0.7);
+  font-size: 0.72rem;
+}
+.slop-hog-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--cyan);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+/* Non-scan tabs: batch, url, settings */
+.placeholder {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--gun-light);
+}
+.placeholder h2 {
+  font-size: 1.1rem; color: var(--navy);
+  margin-bottom: 0.5rem;
+}
+.placeholder p { font-size: 0.85rem; max-width: 500px; margin: 0 auto; line-height: 1.6; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="titlebar">
+  <div class="title-logo">Prompt <span>Sweeper</span></div>
+  <div class="title-tagline">Slop Hog is watching</div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" data-tab="scan">Scan</button>
+  <button class="tab" data-tab="batch">Batch Folder</button>
+  <button class="tab" data-tab="url">URL Scan</button>
+  <button class="tab" data-tab="sites">Site Watchdog</button>
+  <button class="tab" data-tab="settings">Settings</button>
+</div>
+
+<div class="content">
+
+  <!-- SCAN TAB -->
+  <div class="tab-panel" data-panel="scan">
+    <div class="scan-area">
+      <div class="scan-input-col">
+        <textarea class="scan-input" id="scan-input" placeholder="Paste text here to scan for prompt residue, AI slop, and other tells..."></textarea>
+        <div class="scan-actions">
+          <button class="btn btn-primary" id="btn-scan">Scan Text</button>
+          <button class="btn btn-secondary" id="btn-fix">Auto-Fix (local)</button>
+          <button class="btn btn-outline" id="btn-paste">Paste Clipboard</button>
+          <button class="btn btn-outline" id="btn-clear">Clear</button>
+        </div>
+        <div class="slop-hog-status">
+          <span class="slop-hog-dot"></span>
+          <span id="hog-status">Slop Hog is watching your clipboard</span>
+        </div>
+      </div>
+      <div class="results-panel" id="results">
+        <div class="empty-state">
+          <div class="empty-emoji">🐷</div>
+          <div>Paste text and hit Scan to find AI slop.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BATCH TAB -->
+  <div class="tab-panel" data-panel="batch" style="display:none;">
+    <div class="placeholder">
+      <h2>Batch Folder Scanner</h2>
+      <p>Drop a folder of .md, .txt, .docx, or .pdf files. Prompt Sweeper will scan each one, output cleaned copies, and build a report showing what changed per file.</p>
+      <br>
+      <button class="btn btn-primary" id="btn-pick-folder">Pick Folder</button>
+      <div id="batch-results" style="margin-top:1.5rem;"></div>
+    </div>
+  </div>
+
+  <!-- URL TAB -->
+  <div class="tab-panel" data-panel="url" style="display:none;">
+    <div class="placeholder">
+      <h2>URL Scan + .md Generator</h2>
+      <p>Point at any URL. Prompt Sweeper fetches the page, scans the content, and generates a clean .md file for your dev team showing exactly what to fix.</p>
+      <br>
+      <input type="url" id="url-input" placeholder="https://example.com" style="width:300px;padding:8px 12px;border:1.5px solid var(--border);border-radius:6px;font-size:0.85rem;">
+      <button class="btn btn-primary" id="btn-scan-url" style="margin-left:6px;">Scan URL</button>
+      <div id="url-results" style="margin-top:1.5rem;"></div>
+    </div>
+  </div>
+
+  <!-- SITES TAB -->
+  <div class="tab-panel" data-panel="sites" style="display:none;">
+    <div class="placeholder">
+      <h2>Website Watchdog</h2>
+      <p>Schedule recurring scans of client sites. Get a weekly digest: "Slop Hog found X new slop patches on clientsite.com this week."</p>
+      <br>
+      <em>Coming soon — contact for early access.</em>
+    </div>
+  </div>
+
+  <!-- SETTINGS TAB -->
+  <div class="tab-panel" data-panel="settings" style="display:none;">
+    <div class="placeholder" style="text-align:left;max-width:500px;margin:0 auto;">
+      <h2 style="text-align:center;">Settings</h2>
+      <div style="margin-top:1.5rem;">
+        <label style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;">
+          <input type="checkbox" id="set-watchdog"> Enable Slop Hog clipboard watchdog
+        </label>
+        <label style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;">
+          <input type="checkbox" id="set-autoclean"> Auto-clean clipboard (silent, no notification)
+        </label>
+        <label style="display:block;margin-bottom:1rem;">
+          <div style="font-size:0.75rem;color:var(--gun-light);margin-bottom:4px;">Sensitivity</div>
+          <select id="set-threshold" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.82rem;">
+            <option value="high">High (only flag high-severity slop)</option>
+            <option value="medium">Medium (recommended)</option>
+            <option value="low">Low (flag everything)</option>
+          </select>
+        </label>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Tab switching ──
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const name = tab.dataset.tab;
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t === tab));
+    document.querySelectorAll('.tab-panel').forEach(p => {
+      p.style.display = p.dataset.panel === name ? '' : 'none';
+    });
+  });
+});
+
+// ── Navigation from main process ──
+window.sweeper.onNavigate((route) => {
+  const tabName = route === 'home' ? 'scan' : route;
+  const tab = document.querySelector('[data-tab="' + tabName + '"]');
+  if (tab) tab.click();
+});
+
+// ── Scan UI ──
+const scanInput = document.getElementById('scan-input');
+const resultsEl = document.getElementById('results');
+
+async function renderScan(text) {
+  if (!text.trim()) {
+    resultsEl.innerHTML = '<div class="empty-state"><div class="empty-emoji">🐷</div><div>Paste text to scan.</div></div>';
+    return;
+  }
+  const result = await window.sweeper.scan(text);
+  const grade = result.score >= 80 ? { label: 'Clean', cls: 'grade-clean' }
+              : result.score >= 60 ? { label: 'Minor Issues', cls: 'grade-minor' }
+              : result.score >= 40 ? { label: 'Needs Review', cls: 'grade-review' }
+              : { label: 'Slop Found', cls: 'grade-found' };
+
+  const issueHtml = result.issues.map(i =>
+    `<div class="issue-item ${i.severity}"><div class="issue-cat">${i.category}</div><div class="issue-match">"${esc(i.match)}"</div></div>`
+  ).join('') || '<div class="empty-state" style="padding:1rem;">No issues found.</div>';
+
+  resultsEl.innerHTML = `
+    <div class="score-row">
+      <span class="score-num">${result.score}</span>
+      <span class="score-max">/100</span>
+      <span class="grade-pill ${grade.cls}" style="margin-left:auto;">${grade.label}</span>
+    </div>
+    <div class="stat-row">
+      <div class="stat high"><div class="stat-val">${result.highCount}</div><div class="stat-key">High</div></div>
+      <div class="stat med"><div class="stat-val">${result.medCount}</div><div class="stat-key">Medium</div></div>
+      <div class="stat low"><div class="stat-val">${result.lowCount}</div><div class="stat-key">Low</div></div>
+    </div>
+    <div class="issue-list">${issueHtml}</div>
+  `;
+}
+
+document.getElementById('btn-scan').addEventListener('click', () => renderScan(scanInput.value));
+document.getElementById('btn-paste').addEventListener('click', async () => {
+  const text = await navigator.clipboard.readText();
+  scanInput.value = text;
+  renderScan(text);
+});
+document.getElementById('btn-clear').addEventListener('click', () => {
+  scanInput.value = '';
+  renderScan('');
+});
+document.getElementById('btn-fix').addEventListener('click', async () => {
+  const result = await window.sweeper.autoFix(scanInput.value);
+  scanInput.value = result.text;
+  renderScan(result.text);
+});
+
+// ── Batch ──
+document.getElementById('btn-pick-folder').addEventListener('click', async () => {
+  // In a real app, use dialog.showOpenDialog via IPC. For now, prompt.
+  const path = prompt('Folder path:');
+  if (!path) return;
+  try {
+    const r = await window.sweeper.batch.processFolder(path);
+    document.getElementById('batch-results').innerHTML =
+      '<p>Processed ' + r.filesProcessed + ' files. Report: <code>' + r.reportPath + '</code></p>';
+  } catch (e) {
+    document.getElementById('batch-results').innerHTML = '<p style="color:var(--red);">Error: ' + e.message + '</p>';
+  }
+});
+
+// ── URL scan ──
+document.getElementById('btn-scan-url').addEventListener('click', async () => {
+  const url = document.getElementById('url-input').value.trim();
+  if (!url) return;
+  const out = document.getElementById('url-results');
+  out.innerHTML = 'Scanning...';
+  try {
+    const r = await window.sweeper.urlScan.generate(url);
+    out.innerHTML = `<p>Score: ${r.score}/100 → ${r.scoreAfter}/100 after cleanup</p>
+      <p>${r.issueCount} issues found, ${r.changesApplied} changes suggested</p>
+      <p>Report saved to: <code>${r.outPath}</code></p>`;
+  } catch (e) {
+    out.innerHTML = '<p style="color:var(--red);">Error: ' + e.message + '</p>';
+  }
+});
+
+// ── Settings ──
+async function loadSettings() {
+  const s = await window.sweeper.settings.all();
+  document.getElementById('set-watchdog').checked = s.watchdog?.enabled ?? true;
+  document.getElementById('set-autoclean').checked = s.watchdog?.autoClean ?? false;
+  document.getElementById('set-threshold').value = s.watchdog?.threshold ?? 'medium';
+}
+['set-watchdog', 'set-autoclean', 'set-threshold'].forEach(id => {
+  document.getElementById(id).addEventListener('change', async (e) => {
+    const key = { 'set-watchdog': 'watchdog.enabled', 'set-autoclean': 'watchdog.autoClean', 'set-threshold': 'watchdog.threshold' }[id];
+    const val = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    await window.sweeper.settings.set(key, val);
+  });
+});
+loadSettings();
+
+// ── Clipboard detection push from main ──
+window.sweeper.onClipboardDetected(({ text, result }) => {
+  document.getElementById('hog-status').textContent =
+    `Slop Hog snorted — ${result.issues.length} issues in latest clipboard`;
+});
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+</script>
+</body>
+</html>

@@ -593,7 +593,11 @@ async function runAudit(e){
     var data=await res.json();
     clearInterval(loadInt);
     for(var i=1;i<=6;i++){document.getElementById('ls-'+i).classList.remove('active');document.getElementById('ls-'+i).classList.add('done')}
-    if(!data.success||!data.report)throw new Error(data.error||'Audit failed');
+    if(!data.success||!data.report){
+      var msg=data.error||'Audit failed';
+      if(data.details)msg+=' ('+(Array.isArray(data.details)?data.details.join(', '):data.details)+')';
+      throw new Error(msg);
+    }
     await new Promise(function(r){setTimeout(r,600)});
     document.getElementById('loading-section').classList.remove('active');
     var rpt=data.report;

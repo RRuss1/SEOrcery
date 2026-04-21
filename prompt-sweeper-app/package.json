@@ -1,0 +1,51 @@
+{
+  "name": "prompt-sweeper",
+  "productName": "Prompt Sweeper",
+  "version": "0.1.0",
+  "description": "Catch AI prompts, slop, and residue in your writing. With Slop Hog — the ambient clipboard watchdog.",
+  "main": "main.js",
+  "author": "Russell SPC LLC",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build": "electron-builder",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win",
+    "build:linux": "electron-builder --linux"
+  },
+  "devDependencies": {
+    "electron": "^32.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "dependencies": {
+    "electron-store": "^10.0.0"
+  },
+  "build": {
+    "appId": "com.russellspc.promptsweeper",
+    "productName": "Prompt Sweeper",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "assets/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "assets/icons/app-icon.png"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icons/app-icon.png"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icons/app-icon.png",
+      "category": "Utility"
+    }
+  }
+}
