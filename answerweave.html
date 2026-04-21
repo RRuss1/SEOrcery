@@ -419,10 +419,10 @@ function esc(s){var d=document.createElement('div');d.textContent=s;return d.inn
 
 // Loading animation
 function animateLoading(){
-  var steps=[1,2,3,4,5,6],i=0;
+  var i=0;
   return setInterval(function(){
-    if(i>0){document.getElementById('ls-'+i).classList.remove('active');document.getElementById('ls-'+i).classList.add('done')}
-    i++;if(i<=6)document.getElementById('ls-'+i).classList.add('active');
+    if(i>0&&i<=6){var prev=document.getElementById('ls-'+i);if(prev){prev.classList.remove('active');prev.classList.add('done')}}
+    i++;if(i<=6){var next=document.getElementById('ls-'+i);if(next)next.classList.add('active')}
   },2200);
 }
 function resetLoadingSteps(){for(var i=1;i<=6;i++){var el=document.getElementById('ls-'+i);el.classList.remove('active','done')}}
