@@ -315,21 +315,96 @@ body {
 .cred-modal {
   background: var(--white);
   border-radius: 12px;
-  padding: 2rem;
-  max-width: 480px; width: 90%;
+  padding: 1.75rem;
+  max-width: 560px; width: 92%;
+  max-height: 85vh; overflow-y: auto;
   box-shadow: 0 8px 40px rgba(0,0,0,0.2);
 }
 .cred-modal h2 {
   font-size: 1.1rem; font-weight: 700;
-  color: var(--navy); margin-bottom: 1rem;
+  color: var(--navy); margin-bottom: 0.25rem;
 }
-.cred-modal .form-group { margin-bottom: 1rem; }
+.cred-modal .modal-sub {
+  font-size: 0.78rem; color: var(--gun-light);
+  margin-bottom: 1.25rem;
+}
+.cred-modal .form-group { margin-bottom: 0.75rem; }
 .cred-modal .btn-save {
-  width: 100%; height: 42px;
+  width: 100%; height: 44px;
   background: var(--cyan); color: var(--navy);
   border: none; border-radius: 6px;
-  font-size: 0.85rem; font-weight: 600; font-family: var(--font);
+  font-size: 0.85rem; font-weight: 700; font-family: var(--font);
   cursor: pointer; margin-top: 0.5rem;
+  box-shadow: 0 0 16px rgba(0,229,255,0.25);
+}
+.cred-section {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+}
+.cred-section-head {
+  background: var(--linen);
+  padding: 0.65rem 1rem;
+  display: flex; align-items: center; gap: 0.5rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+}
+.cred-section-head h4 {
+  font-size: 0.82rem; font-weight: 700; color: var(--navy);
+  flex: 1;
+}
+.cred-section-head .status {
+  font-size: 0.62rem; font-weight: 700;
+  padding: 2px 8px; border-radius: 3px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+}
+.cred-section-head .status.ok { background: rgba(34,197,94,0.15); color: #16A34A; }
+.cred-section-head .status.off { background: rgba(107,114,128,0.15); color: #6B7280; }
+.cred-section-head .chev {
+  font-size: 0.75rem; color: var(--gun-light);
+  transition: transform 0.2s;
+}
+.cred-section.open .chev { transform: rotate(180deg); }
+.cred-section-body {
+  padding: 0.85rem 1rem;
+  display: none;
+}
+.cred-section.open .cred-section-body { display: block; }
+.cred-section-body .form-group label {
+  display: block; font-size: 0.65rem; font-weight: 600;
+  color: var(--gun-light); text-transform: uppercase;
+  letter-spacing: 0.06em; margin-bottom: 3px;
+}
+.cred-section-body .form-group input {
+  width: 100%; border: 1.5px solid var(--border);
+  border-radius: 6px; padding: 7px 9px;
+  font-size: 0.78rem; font-family: var(--font);
+  color: var(--gun); background: var(--white);
+}
+.cred-section-body .hint {
+  font-size: 0.68rem; color: var(--gun-light);
+  margin-top: 4px; line-height: 1.4;
+}
+.cred-section-body .hint a { color: var(--cyan); text-decoration: none; }
+.master-toggle {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  background: var(--linen);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.78rem; color: var(--navy);
+  cursor: pointer;
+  border: 1px solid var(--border);
+}
+.master-toggle input[type="checkbox"] {
+  width: 16px; height: 16px; accent-color: var(--cyan);
+  cursor: pointer;
+}
+.master-toggle-text { flex: 1; }
+.master-toggle-hint {
+  font-size: 0.68rem; color: var(--gun-light);
+  margin-top: 2px;
 }
 
 /* Spinner */
@@ -371,15 +446,40 @@ body {
 
     <!-- Connections -->
     <div class="sidebar-card">
-      <h3>Connections</h3>
-      <div class="status-row" style="margin-bottom:6px;">
+      <div style="display:flex;align-items:center;margin-bottom:0.5rem;">
+        <h3 style="flex:1;margin:0;">Connections</h3>
+        <span style="font-size:0.62rem;color:var(--cyan);cursor:pointer;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;" onclick="openCreds()">Configure</span>
+      </div>
+      <div class="status-row" style="margin-bottom:5px;">
         <span class="status-dot off" id="worker-dot"></span>
         <span>Worker</span>
-        <span style="margin-left:auto;font-size:0.65rem;color:var(--cyan);cursor:pointer;" onclick="openCreds()">configure</span>
+        <span style="margin-left:auto;font-size:0.62rem;color:var(--gun-light);" id="worker-mode">--</span>
       </div>
-      <div class="status-row">
+      <div class="status-row" style="margin-bottom:5px;">
         <span class="status-dot off" id="zernio-dot"></span>
         <span>Zernio</span>
+        <span style="margin-left:auto;font-size:0.62rem;color:var(--gun-light);" id="zernio-mode">--</span>
+      </div>
+      <div style="height:1px;background:var(--border);margin:8px 0;"></div>
+      <div class="status-row" style="margin-bottom:5px;">
+        <span class="status-dot off" id="linkedin-dot"></span>
+        <span>LinkedIn</span>
+        <span style="margin-left:auto;font-size:0.62rem;color:var(--gun-light);" id="linkedin-mode">--</span>
+      </div>
+      <div class="status-row" style="margin-bottom:5px;">
+        <span class="status-dot off" id="facebook-dot"></span>
+        <span>Facebook</span>
+        <span style="margin-left:auto;font-size:0.62rem;color:var(--gun-light);" id="facebook-mode">--</span>
+      </div>
+      <div class="status-row" style="margin-bottom:5px;">
+        <span class="status-dot off" id="instagram-dot"></span>
+        <span>Instagram</span>
+        <span style="margin-left:auto;font-size:0.62rem;color:var(--gun-light);" id="instagram-mode">--</span>
+      </div>
+      <div class="status-row">
+        <span class="status-dot off" id="gbp-dot"></span>
+        <span>Google Business</span>
+        <span style="margin-left:auto;font-size:0.62rem;color:var(--gun-light);" id="gbp-mode">--</span>
       </div>
     </div>
 
@@ -552,14 +652,116 @@ body {
 <div class="cred-overlay" id="cred-overlay">
   <div class="cred-modal">
     <h2>Configure Connections</h2>
+    <p class="modal-sub">Fill in what you use. Direct connections are optional - if missing, the app falls back to Zernio.</p>
+
+    <!-- Worker URL (required) -->
     <div class="form-group">
-      <label>Worker URL</label>
-      <input type="url" id="cred-worker" placeholder="https://russellspc-social.xxx.workers.dev">
+      <label style="display:block;font-size:0.65rem;font-weight:600;color:var(--gun-light);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;">Worker URL <span style="color:#EF4444;">*</span></label>
+      <input type="url" id="cred-worker" placeholder="https://russellspc-social.xxx.workers.dev" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:0.78rem;font-family:var(--font);color:var(--gun);">
+      <div style="font-size:0.68rem;color:var(--gun-light);margin-top:4px;">Your deployed russellspc-social Cloudflare Worker.</div>
     </div>
-    <div class="form-group">
-      <label>Zernio API Key</label>
-      <input type="password" id="cred-zernio" placeholder="Your Zernio API key">
+
+    <!-- Master toggle -->
+    <label class="master-toggle">
+      <input type="checkbox" id="cred-prefer-direct" checked>
+      <div class="master-toggle-text">
+        Prefer direct connections when available
+        <div class="master-toggle-hint">Falls back to Zernio for any platform without direct credentials.</div>
+      </div>
+    </label>
+
+    <!-- Zernio (primary) -->
+    <div class="cred-section open" id="cred-sec-zernio">
+      <div class="cred-section-head" onclick="toggleCredSection('zernio')">
+        <h4>Zernio <span style="font-weight:400;color:var(--gun-light);font-size:0.72rem;">(fallback / all platforms)</span></h4>
+        <span class="status off" id="cred-stat-zernio">Off</span>
+        <span class="chev">&#9662;</span>
+      </div>
+      <div class="cred-section-body">
+        <div class="form-group">
+          <label>API Key</label>
+          <input type="password" id="cred-zernio" placeholder="Your Zernio API key">
+          <div class="hint">Sign up at <a href="https://zernio.com" target="_blank">zernio.com</a>, connect your accounts there, then paste the API key.</div>
+        </div>
+      </div>
     </div>
+
+    <!-- LinkedIn -->
+    <div class="cred-section" id="cred-sec-linkedin">
+      <div class="cred-section-head" onclick="toggleCredSection('linkedin')">
+        <h4>LinkedIn <span style="font-weight:400;color:var(--gun-light);font-size:0.72rem;">(direct)</span></h4>
+        <span class="status off" id="cred-stat-linkedin">Off</span>
+        <span class="chev">&#9662;</span>
+      </div>
+      <div class="cred-section-body">
+        <div class="form-group">
+          <label>Access Token</label>
+          <input type="password" id="cred-linkedin-token" placeholder="LinkedIn OAuth 2.0 access token">
+        </div>
+        <div class="form-group">
+          <label>Person URN</label>
+          <input type="text" id="cred-linkedin-urn" placeholder="urn:li:person:xxxxxxxx">
+        </div>
+        <div class="hint">Generate tokens from <a href="https://www.linkedin.com/developers/" target="_blank">LinkedIn Developer Console</a>. Needs w_member_social scope.</div>
+      </div>
+    </div>
+
+    <!-- Facebook Page -->
+    <div class="cred-section" id="cred-sec-facebook">
+      <div class="cred-section-head" onclick="toggleCredSection('facebook')">
+        <h4>Facebook Page <span style="font-weight:400;color:var(--gun-light);font-size:0.72rem;">(direct)</span></h4>
+        <span class="status off" id="cred-stat-facebook">Off</span>
+        <span class="chev">&#9662;</span>
+      </div>
+      <div class="cred-section-body">
+        <div class="form-group">
+          <label>Page Access Token</label>
+          <input type="password" id="cred-fb-token" placeholder="Long-lived Page access token">
+        </div>
+        <div class="form-group">
+          <label>Page ID</label>
+          <input type="text" id="cred-fb-pageid" placeholder="Your Facebook Page ID">
+        </div>
+        <div class="hint">Generate at <a href="https://developers.facebook.com/tools/explorer/" target="_blank">Graph API Explorer</a>. Scope: pages_manage_posts, pages_read_engagement.</div>
+      </div>
+    </div>
+
+    <!-- Instagram Business -->
+    <div class="cred-section" id="cred-sec-instagram">
+      <div class="cred-section-head" onclick="toggleCredSection('instagram')">
+        <h4>Instagram Business <span style="font-weight:400;color:var(--gun-light);font-size:0.72rem;">(direct)</span></h4>
+        <span class="status off" id="cred-stat-instagram">Off</span>
+        <span class="chev">&#9662;</span>
+      </div>
+      <div class="cred-section-body">
+        <div class="form-group">
+          <label>Instagram Business Account ID</label>
+          <input type="text" id="cred-ig-account" placeholder="IG Business account ID (numeric)">
+        </div>
+        <div class="hint">Uses the same Facebook Page Access Token above. IG account must be a Business or Creator account linked to your Facebook Page.</div>
+      </div>
+    </div>
+
+    <!-- Google Business Profile -->
+    <div class="cred-section" id="cred-sec-gbp">
+      <div class="cred-section-head" onclick="toggleCredSection('gbp')">
+        <h4>Google Business Profile <span style="font-weight:400;color:var(--gun-light);font-size:0.72rem;">(direct)</span></h4>
+        <span class="status off" id="cred-stat-gbp">Off</span>
+        <span class="chev">&#9662;</span>
+      </div>
+      <div class="cred-section-body">
+        <div class="form-group">
+          <label>Access Token</label>
+          <input type="password" id="cred-gbp-token" placeholder="OAuth 2.0 access token">
+        </div>
+        <div class="form-group">
+          <label>Location Resource Name</label>
+          <input type="text" id="cred-gbp-location" placeholder="locations/XXXXXXXXXXXXXXXXXXX">
+        </div>
+        <div class="hint">Get tokens from <a href="https://console.cloud.google.com" target="_blank">Google Cloud Console</a>. Needs Business Profile API access (approval required).</div>
+      </div>
+    </div>
+
     <button class="btn-save" onclick="saveCreds()">Save and Close</button>
   </div>
 </div>
@@ -605,41 +807,136 @@ function setStatus(msg, type) {
 }
 
 // ── Credential modal ──
+// ── Credential fields + storage keys ──
+const CRED_FIELDS = {
+  worker:           'pb_worker_url',
+  preferDirect:     'pb_prefer_direct',
+  zernio:           'pb_zernio_key',
+  linkedinToken:    'pb_linkedin_token',
+  linkedinUrn:      'pb_linkedin_urn',
+  fbToken:          'pb_fb_token',
+  fbPageId:         'pb_fb_pageid',
+  igAccount:        'pb_ig_account',
+  gbpToken:         'pb_gbp_token',
+  gbpLocation:      'pb_gbp_location',
+};
+
+function getCred(key) {
+  return localStorage.getItem(CRED_FIELDS[key]) || '';
+}
+
 function openCreds() {
-  document.getElementById('cred-worker').value = localStorage.getItem('pb_worker_url') || '';
-  document.getElementById('cred-zernio').value = localStorage.getItem('pb_zernio_key') || '';
+  document.getElementById('cred-worker').value = getCred('worker');
+  document.getElementById('cred-zernio').value = getCred('zernio');
+  document.getElementById('cred-linkedin-token').value = getCred('linkedinToken');
+  document.getElementById('cred-linkedin-urn').value = getCred('linkedinUrn');
+  document.getElementById('cred-fb-token').value = getCred('fbToken');
+  document.getElementById('cred-fb-pageid').value = getCred('fbPageId');
+  document.getElementById('cred-ig-account').value = getCred('igAccount');
+  document.getElementById('cred-gbp-token').value = getCred('gbpToken');
+  document.getElementById('cred-gbp-location').value = getCred('gbpLocation');
+  document.getElementById('cred-prefer-direct').checked = localStorage.getItem(CRED_FIELDS.preferDirect) !== 'false';
   document.getElementById('cred-overlay').classList.add('open');
 }
 
 function saveCreds() {
-  const worker = document.getElementById('cred-worker').value.trim();
-  const zernio = document.getElementById('cred-zernio').value.trim();
-  if (worker) localStorage.setItem('pb_worker_url', worker);
-  if (zernio) localStorage.setItem('pb_zernio_key', zernio);
+  const setOrRemove = function(field, val) {
+    if (val) localStorage.setItem(CRED_FIELDS[field], val);
+    else localStorage.removeItem(CRED_FIELDS[field]);
+  };
+  setOrRemove('worker', document.getElementById('cred-worker').value.trim());
+  setOrRemove('zernio', document.getElementById('cred-zernio').value.trim());
+  setOrRemove('linkedinToken', document.getElementById('cred-linkedin-token').value.trim());
+  setOrRemove('linkedinUrn', document.getElementById('cred-linkedin-urn').value.trim());
+  setOrRemove('fbToken', document.getElementById('cred-fb-token').value.trim());
+  setOrRemove('fbPageId', document.getElementById('cred-fb-pageid').value.trim());
+  setOrRemove('igAccount', document.getElementById('cred-ig-account').value.trim());
+  setOrRemove('gbpToken', document.getElementById('cred-gbp-token').value.trim());
+  setOrRemove('gbpLocation', document.getElementById('cred-gbp-location').value.trim());
+  localStorage.setItem(CRED_FIELDS.preferDirect, document.getElementById('cred-prefer-direct').checked ? 'true' : 'false');
   document.getElementById('cred-overlay').classList.remove('open');
   checkConnections();
 }
 
-// Click outside modal to close
+function toggleCredSection(key) {
+  document.getElementById('cred-sec-' + key).classList.toggle('open');
+}
+
 document.getElementById('cred-overlay').addEventListener('click', function(e) {
   if (e.target === this) this.classList.remove('open');
 });
 
-// ── Connection check ──
+// ── Routing logic: decide direct vs Zernio per platform ──
+function getPlatformMode(platform) {
+  // returns 'direct', 'zernio', or 'off'
+  const preferDirect = localStorage.getItem(CRED_FIELDS.preferDirect) !== 'false';
+  const hasZernio = !!getCred('zernio');
+
+  const directAvailable = {
+    linkedin:  !!getCred('linkedinToken') && !!getCred('linkedinUrn'),
+    facebook:  !!getCred('fbToken') && !!getCred('fbPageId'),
+    instagram: !!getCred('fbToken') && !!getCred('igAccount'),
+    gbp:       !!getCred('gbpToken') && !!getCred('gbpLocation'),
+  }[platform];
+
+  if (preferDirect && directAvailable) return 'direct';
+  if (hasZernio) return 'zernio';
+  if (directAvailable) return 'direct';
+  return 'off';
+}
+
+// ── Connection status display ──
 function checkConnections() {
-  const hasWorker = !!localStorage.getItem('pb_worker_url');
-  const hasZernio = !!localStorage.getItem('pb_zernio_key');
+  const hasWorker = !!getCred('worker');
+  const hasZernio = !!getCred('zernio');
+
+  // Worker
   document.getElementById('worker-dot').className = 'status-dot ' + (hasWorker ? 'ok' : 'off');
+  document.getElementById('worker-mode').textContent = hasWorker ? 'Ready' : 'Not set';
+  document.getElementById('worker-mode').style.color = hasWorker ? '#22C55E' : 'var(--gun-light)';
+
+  // Zernio
   document.getElementById('zernio-dot').className = 'status-dot ' + (hasZernio ? 'ok' : 'off');
+  document.getElementById('zernio-mode').textContent = hasZernio ? 'Connected' : 'Not set';
+  document.getElementById('zernio-mode').style.color = hasZernio ? '#22C55E' : 'var(--gun-light)';
+
+  // Per-platform
+  ['linkedin', 'facebook', 'instagram', 'gbp'].forEach(function(p) {
+    const mode = getPlatformMode(p);
+    const dot = document.getElementById(p + '-dot');
+    const modeEl = document.getElementById(p + '-mode');
+    dot.className = 'status-dot ' + (mode === 'off' ? 'off' : 'ok');
+    const label = mode === 'direct' ? 'Direct' : mode === 'zernio' ? 'Via Zernio' : 'Off';
+    const color = mode === 'direct' ? 'var(--cyan)' : mode === 'zernio' ? '#F59E0B' : 'var(--gun-light)';
+    modeEl.textContent = label;
+    modeEl.style.color = color;
+  });
+
+  // Update modal status badges if modal is in DOM
+  if (document.getElementById('cred-stat-zernio')) {
+    document.getElementById('cred-stat-zernio').className = 'status ' + (hasZernio ? 'ok' : 'off');
+    document.getElementById('cred-stat-zernio').textContent = hasZernio ? 'Set' : 'Off';
+    ['linkedin', 'facebook', 'instagram', 'gbp'].forEach(function(p) {
+      const available = {
+        linkedin:  !!getCred('linkedinToken') && !!getCred('linkedinUrn'),
+        facebook:  !!getCred('fbToken') && !!getCred('fbPageId'),
+        instagram: !!getCred('fbToken') && !!getCred('igAccount'),
+        gbp:       !!getCred('gbpToken') && !!getCred('gbpLocation'),
+      }[p];
+      const el = document.getElementById('cred-stat-' + p);
+      el.className = 'status ' + (available ? 'ok' : 'off');
+      el.textContent = available ? 'Set' : 'Off';
+    });
+  }
 }
 
 // ── Worker helper ──
 function getWorkerUrl() {
-  return localStorage.getItem('pb_worker_url') || '';
+  return getCred('worker');
 }
 
 function getZernioKey() {
-  return localStorage.getItem('pb_zernio_key') || '';
+  return getCred('zernio');
 }
 
 async function workerPost(path, body) {
@@ -794,6 +1091,7 @@ async function combineIntoReel(imageB64, audioB64) {
 }
 
 // ── Post All ──
+// Routes each platform to direct or Zernio based on getPlatformMode()
 async function postAll() {
   const btn = document.getElementById('post-btn');
   btn.disabled = true;
@@ -803,19 +1101,80 @@ async function postAll() {
   document.getElementById('post-results-card').style.display = 'block';
   setStatus('Posting to all platforms...', 'active');
 
-  try {
-    // TODO: Wire Zernio API calls here
-    // For now, show placeholder
-    setStatus('Zernio posting not yet wired', 'error');
-    ['linkedin','instagram','facebook','google'].forEach(p => {
-      document.getElementById('res-' + p).textContent = 'Not wired yet';
-      document.getElementById('res-' + p).className = 'post-status fail';
-    });
-  } catch (e) {
-    setStatus('Post error: ' + e.message, 'error');
+  const platforms = [
+    { key: 'linkedin',  resId: 'res-linkedin',  content: copy.linkedin?.copy,              media: 'reel' },
+    { key: 'instagram', resId: 'res-instagram', content: copy.audiogram?.caption,          media: 'reel' },
+    { key: 'facebook',  resId: 'res-facebook',  content: copy.audiogram?.caption,          media: 'reel' },
+    { key: 'gbp',       resId: 'res-google',    content: copy.google?.copy,                media: 'image' },
+  ];
+
+  const results = {};
+  for (const p of platforms) {
+    const mode = getPlatformMode(p.key);
+    const resEl = document.getElementById(p.resId);
+
+    if (mode === 'off') {
+      resEl.textContent = 'Not connected';
+      resEl.className = 'post-status fail';
+      results[p.key] = { status: 'skipped' };
+      continue;
+    }
+
+    resEl.textContent = mode === 'direct' ? 'Posting (direct)...' : 'Posting (Zernio)...';
+    resEl.className = 'post-status';
+
+    try {
+      let result;
+      if (mode === 'direct') {
+        result = await postDirect(p.key, p.content, p.media);
+      } else {
+        result = await postViaZernio(p.key, p.content, p.media);
+      }
+      resEl.textContent = (mode === 'direct' ? 'Posted (direct)' : 'Posted (Zernio)');
+      resEl.className = 'post-status ok';
+      results[p.key] = { status: 'ok', mode, result };
+    } catch (e) {
+      // If direct failed and Zernio is available, try fallback
+      if (mode === 'direct' && !!getCred('zernio')) {
+        try {
+          resEl.textContent = 'Direct failed, retrying via Zernio...';
+          const result = await postViaZernio(p.key, p.content, p.media);
+          resEl.textContent = 'Posted (Zernio fallback)';
+          resEl.className = 'post-status ok';
+          results[p.key] = { status: 'ok', mode: 'zernio-fallback', result };
+          continue;
+        } catch (e2) {
+          resEl.textContent = 'Failed: ' + e2.message;
+          resEl.className = 'post-status fail';
+          results[p.key] = { status: 'failed', error: e2.message };
+          continue;
+        }
+      }
+      resEl.textContent = 'Failed: ' + e.message;
+      resEl.className = 'post-status fail';
+      results[p.key] = { status: 'failed', error: e.message };
+    }
   }
 
+  const ok = Object.values(results).filter(r => r.status === 'ok').length;
+  setStatus(ok + '/' + platforms.length + ' posted', ok === platforms.length ? 'done' : 'error');
   btn.disabled = false;
+}
+
+// ── Platform posting (TODO: wire to actual APIs) ──
+async function postDirect(platform, content, mediaType) {
+  // TODO: implement direct posting per platform
+  // linkedin:  POST to /v2/ugcPosts using LINKEDIN_TOKEN + LINKEDIN_URN
+  // facebook:  POST to /{page-id}/feed or /{page-id}/videos using FB_TOKEN
+  // instagram: POST to /{ig-account-id}/media using FB_TOKEN (IG Graph API)
+  // gbp:       POST to Business Profile API /accounts/.../locations/.../localPosts
+  throw new Error('Direct posting not yet wired for ' + platform);
+}
+
+async function postViaZernio(platform, content, mediaType) {
+  // TODO: upload media to Zernio, then POST to /v1/posts
+  // Requires getZernioKey() + media upload + post body
+  throw new Error('Zernio posting not yet wired for ' + platform);
 }
 
 // ── Download All ──
