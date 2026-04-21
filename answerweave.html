@@ -356,23 +356,15 @@ body{font-family:var(--font);background:var(--linen);min-height:100vh;display:fl
       <p class="section-subtitle">Power Loom crawls the site, detects issues across all 5 AEO dimensions, and generates a downloadable fix package with patches, documentation, and validation steps.</p>
 
       <div id="loom-config" style="margin:1.25rem 0;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
-          <div>
-            <label style="display:block;font-size:0.65rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Priority threshold</label>
-            <select id="loom-threshold" style="width:100%;height:36px;border:1.5px solid var(--border);border-radius:6px;padding:0 10px;font-size:0.82rem;font-family:var(--font);">
-              <option value="low">Low (all fixes)</option>
-              <option value="medium" selected>Medium (3+ impact)</option>
-              <option value="high">High (6+ impact only)</option>
-            </select>
-          </div>
-          <div>
-            <label style="display:block;font-size:0.65rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Max fixes</label>
-            <select id="loom-limit" style="width:100%;height:36px;border:1.5px solid var(--border);border-radius:6px;padding:0 10px;font-size:0.82rem;font-family:var(--font);">
-              <option value="5">5 fixes</option>
-              <option value="10" selected>10 fixes</option>
-              <option value="15">15 fixes</option>
-            </select>
-          </div>
+        <div>
+          <label style="display:block;font-size:0.65rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">How many fixes</label>
+          <select id="loom-limit" style="width:100%;height:36px;border:1.5px solid var(--border);border-radius:6px;padding:0 10px;font-size:0.82rem;font-family:var(--font);">
+            <option value="5">Top 5 highest-impact fixes</option>
+            <option value="10" selected>Top 10 highest-impact fixes</option>
+            <option value="15">Top 15 highest-impact fixes</option>
+            <option value="50">All detected fixes</option>
+          </select>
+          <p style="font-size:0.7rem;color:var(--muted);margin-top:6px;line-height:1.5;">Power Loom ranks every detected issue by impact and returns the top N. Low-impact issues are included if they fit in the count.</p>
         </div>
       </div>
 
@@ -711,7 +703,7 @@ async function runLoom() {
         audit: audit,
         site_type: 'static',
         fix_limit: parseInt(document.getElementById('loom-limit').value),
-        priority_threshold: document.getElementById('loom-threshold').value
+        priority_threshold: 'low'
       })
     });
 
