@@ -732,6 +732,13 @@ async function runLoom() {
     status.textContent = 'Complete';
 
     if (data.error) throw new Error(data.error);
+    if (data.crawl_error) {
+      status.textContent = data.message || 'Site crawl failed.';
+      status.style.color = '#F59E0B';
+      btn.disabled = false;
+      btn.innerHTML = 'Generate Fix Package';
+      return;
+    }
     if (data.fix_count === 0) {
       status.textContent = 'No fixes found above threshold.';
       btn.disabled = false;
