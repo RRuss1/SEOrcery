@@ -1,6 +1,9 @@
-// Prompt Sweeper Detection Engine v2.0
+// Prompt Sweeper Detection Engine v2.4
 // Categories: Prompt Residue, AI Slop, Structural Tells, Prompt Injection
 // Ported from Chrome extension for Electron (CommonJS)
+// v2.3: +15 patterns — marketing superlatives, agency boilerplate, hollow value claims
+// v2.4: +18 patterns — creative-writing prompt residue (style mimicry, character beats,
+//        iteration artifacts, word-count prompts, rating tags)
 
 const RULES = [
 
@@ -57,6 +60,64 @@ const RULES = [
   { pattern: /\bthis\s+underscores\s+the\s+(importance|need|value|significance)\s+of\b/gi, category: 'AI Slop', severity: 'medium' },
   { pattern: /\b(leveraging|tapping\s+into)\s+the\s+(power|potential)\s+of\b/gi, category: 'AI Slop', severity: 'medium' },
   { pattern: /\bas\s+we\s+(know|navigate|move\s+forward|look\s+ahead)\b/gi, category: 'AI Slop', severity: 'medium' },
+
+  // ═══════════════════════════════════════════════════════════════
+  // v2.3 — Marketing superlatives, agency boilerplate, hollow value claims
+  // ═══════════════════════════════════════════════════════════════
+  { pattern: /\belite\s+(AI|tech|consulting|service|solution|team|engineer|agency)/gi, category: 'AI Slop', severity: 'medium' },
+  { pattern: /\bstate[\s-]of[\s-]the[\s-]art\b/gi, category: 'AI Slop', severity: 'medium' },
+  { pattern: /\bnext[\s-](generation|gen)\b/gi, category: 'AI Slop', severity: 'medium' },
+  { pattern: /\b(industry[\s-]leading|best[\s-]in[\s-]class|world[\s-]class)\b/gi, category: 'AI Slop', severity: 'medium' },
+  { pattern: /\b(revolutioniz(?:e|es|ed|ing)|revolutionary)\b/gi, category: 'AI Slop', severity: 'medium' },
+  { pattern: /\btransform\s+your\s+(business|team|workflow|organization|company|life|career|future|industry)\b/gi, category: 'AI Slop', severity: 'medium' },
+  { pattern: /\bunleash\s+(the\s+)?(power|potential|creativity|innovation|value)\b/gi, category: 'AI Slop', severity: 'medium' },
+  { pattern: /\bintelligent\s+(systems?|solutions?|platforms?|automation)\b/gi, category: 'AI Slop', severity: 'medium' },
+  { pattern: /\bAI[\s-]driven\s+(workflow|solution|transformation|insight|strategy|innovation|future)s?\b/gi, category: 'AI Slop', severity: 'medium' },
+
+  // Agency boilerplate
+  { pattern: /\bwe['’]?re?\s+passionate\s+about\b/gi, category: 'AI Slop', severity: 'medium' },
+  { pattern: /\bwe\s+pride\s+ourselves\b/gi, category: 'AI Slop', severity: 'medium' },
+  { pattern: /\bcommitted\s+to\s+(excellence|delivering|providing|ensuring)\b/gi, category: 'AI Slop', severity: 'medium' },
+
+  // Hollow value claims + jargon
+  { pattern: /\b(drive|deliver|maximize|unlock)\s+(value|impact|results|outcomes|growth|success)\b/gi, category: 'AI Buzzword', severity: 'low' },
+  { pattern: /\bmission[\s-]critical\b/gi, category: 'AI Buzzword', severity: 'low' },
+  { pattern: /\bturn[\s-]?key\b/gi, category: 'AI Buzzword', severity: 'low' },
+
+  // ═══════════════════════════════════════════════════════════════
+  // v2.4 — Creative-writing prompt residue
+  // (fiction workflows, style mimicry, iteration artifacts, rating tags)
+  // ═══════════════════════════════════════════════════════════════
+
+  // Extended AI preambles
+  { pattern: /\bhere['’]?s\s+(a|an|the|your)\s+(enhanced|improved|polished|refined|reworked|rephrased|restructured|tightened)\b/gi, category: 'AI Preamble', severity: 'medium' },
+  { pattern: /\bbased\s+on\s+your\s+(request|prompt|input|feedback|instructions?|notes?|preferences?)\b/gi, category: 'AI Preamble', severity: 'medium' },
+  { pattern: /\bI['’]?ve\s+(drafted|written|created|prepared|provided|generated|offered|included)\s+(\d+|two|three|four|five|several|multiple|alternative|different)\s+(options?|versions?|alternatives?|endings?|drafts?|variations?)\b/gi, category: 'AI Preamble', severity: 'medium' },
+  { pattern: /\bmaking\s+\w+(\s+\w+)?\s+(more|less|even\s+more)\s+(relatable|sympathetic|likeable|mysterious|grounded|believable|human|memorable)\b/gi, category: 'AI Preamble', severity: 'medium' },
+
+  // Conversational artifacts
+  { pattern: /\bdo\s+you\s+want\s+me\s+to\s+\w+/gi, category: 'AI Closing', severity: 'medium' },
+  { pattern: /\bif\s+you\s+(want|'d\s+like|prefer|like),?\s+I\s+can\s+(also|even\s+)?(create|write|generate|provide|offer|draft|do|make|add|expand|explore)\b/gi, category: 'AI Closing', severity: 'medium' },
+  { pattern: /\blet\s+me\s+know\s+which\s+(one|option|version|ending|draft|variation|direction|approach)\b/gi, category: 'AI Closing', severity: 'medium' },
+
+  // Fiction-workflow prompt residue
+  { pattern: /\bmake\s+the\s+tone\s+(more|less|extra)\s+\w+/gi, category: 'Prompt Instruction', severity: 'high' },
+  { pattern: /\benhance\s+(this|the|my)\s+(scene|passage|section|chapter|dialogue|description|paragraph|draft)\s+to\s+be\s+(more|less)\b/gi, category: 'Prompt Instruction', severity: 'high' },
+  { pattern: /\balign\s+(more\s+)?with\s+.{1,40}?(style|voice|tone|writing|prose)\b/gi, category: 'Prompt Instruction', severity: 'high' },
+  { pattern: /\bfocus\s+on\s+\w+(?:['’]s|s')\s+(internal|emotional|mental|character|psychological)\s+(struggle|journey|development|arc|conflict|monologue)\b/gi, category: 'Prompt Instruction', severity: 'high' },
+  { pattern: /\bensure\s+(the|each|all)\s+characters?\s+(use|have|display|show|feel|sound|avoid|stay)\b/gi, category: 'Prompt Instruction', severity: 'high' },
+  { pattern: /\bcheck\s+(this|the|my)\s+(scene|passage|chapter|text|story|plot|draft|piece|manuscript)\s+for\s+(logic|inconsistencies|plot\s+holes|errors|issues|problems|gaps|continuity)\b/gi, category: 'Prompt Instruction', severity: 'high' },
+  { pattern: /\bupdate\s+the\s+(glossary|index|summary|timeline|character\s+list|synopsis|outline|notes?)\s+(based\s+on|for|with|to\s+reflect)\b/gi, category: 'Prompt Instruction', severity: 'high' },
+
+  // Structural writing prompts
+  { pattern: /\bwrite\s+a\s+\d{3,}[\s-]?word\s+(chapter|article|post|section|scene|story|essay|piece|blog)\b/gi, category: 'Prompt Instruction', severity: 'high' },
+  { pattern: /\btranslate\s+(this|the|my)\s+(text|dialogue|passage|sentence|paragraph|section|line|excerpt)\s+(into|to)\b/gi, category: 'Prompt Instruction', severity: 'high' },
+
+  // Plot-beat scaffolding
+  { pattern: /\bwhere\s+(the\s+)?(protagonist|antagonist|hero|villain|main\s+character|narrator)\s+(faces|encounters|discovers|must|struggles|fights|battles|confronts)\b/gi, category: 'Prompt Instruction', severity: 'medium' },
+
+  // Fiction rating tags
+  { pattern: /\b(intensity|spice|violence|tension|heat|romance|action|angst)\s+\d+(\s*[,·•|/]\s*(intensity|spice|violence|tension|heat|romance|action|angst)\s+\d+)+\b/gi, category: 'Prompt Instruction', severity: 'high' },
 
   { pattern: /\bit['’]?s\s+not\s+(just|only)\s+(about\s+)?\w+[,;]\s*(it['’]?s|but)\s+(about|also)\b/gi, category: 'AI Structure', severity: 'medium' },
   { pattern: /\bthis\s+isn['’]?t\s+just\s+(about\s+)?\w+[,;]\s*(it['’]?s|but)\b/gi, category: 'AI Structure', severity: 'medium' },

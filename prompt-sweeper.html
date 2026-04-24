@@ -475,6 +475,47 @@ const RULES = [
   { pattern: /\b(leveraging|tapping\s+into)\s+the\s+(power|potential)\s+of\b/gi, category: "AI Slop", severity: "medium" },
   { pattern: /\bas\s+we\s+(know|navigate|move\s+forward|look\s+ahead)\b/gi, category: "AI Slop", severity: "medium" },
 
+  // MEDIUM: Marketing superlatives (v2.3)
+  { pattern: /\belite\s+(AI|tech|consulting|service|solution|team|engineer|agency)/gi, category: "AI Slop", severity: "medium" },
+  { pattern: /\bstate[\s-]of[\s-]the[\s-]art\b/gi, category: "AI Slop", severity: "medium" },
+  { pattern: /\bnext[\s-](generation|gen)\b/gi, category: "AI Slop", severity: "medium" },
+  { pattern: /\b(industry[\s-]leading|best[\s-]in[\s-]class|world[\s-]class)\b/gi, category: "AI Slop", severity: "medium" },
+  { pattern: /\b(revolutioniz(?:e|es|ed|ing)|revolutionary)\b/gi, category: "AI Slop", severity: "medium" },
+  { pattern: /\btransform\s+your\s+(business|team|workflow|organization|company|life|career|future|industry)\b/gi, category: "AI Slop", severity: "medium" },
+  { pattern: /\bunleash\s+(the\s+)?(power|potential|creativity|innovation|value)\b/gi, category: "AI Slop", severity: "medium" },
+  { pattern: /\bintelligent\s+(systems?|solutions?|platforms?|automation)\b/gi, category: "AI Slop", severity: "medium" },
+  { pattern: /\bAI[\s-]driven\s+(workflow|solution|transformation|insight|strategy|innovation|future)s?\b/gi, category: "AI Slop", severity: "medium" },
+
+  // MEDIUM: Agency boilerplate (v2.3)
+  { pattern: /\bwe[''’]?re?\s+passionate\s+about\b/gi, category: "AI Slop", severity: "medium" },
+  { pattern: /\bwe\s+pride\s+ourselves\b/gi, category: "AI Slop", severity: "medium" },
+  { pattern: /\bcommitted\s+to\s+(excellence|delivering|providing|ensuring)\b/gi, category: "AI Slop", severity: "medium" },
+
+  // LOW: Hollow value claims + jargon (v2.3)
+  { pattern: /\b(drive|deliver|maximize|unlock)\s+(value|impact|results|outcomes|growth|success)\b/gi, category: "AI Buzzword", severity: "low" },
+  { pattern: /\bmission[\s-]critical\b/gi, category: "AI Buzzword", severity: "low" },
+  { pattern: /\bturn[\s-]?key\b/gi, category: "AI Buzzword", severity: "low" },
+
+  // v2.4 — Creative-writing prompt residue
+  { pattern: /\bhere[''’]?s\s+(a|an|the|your)\s+(enhanced|improved|polished|refined|reworked|rephrased|restructured|tightened)\b/gi, category: "AI Preamble", severity: "medium" },
+  { pattern: /\bbased\s+on\s+your\s+(request|prompt|input|feedback|instructions?|notes?|preferences?)\b/gi, category: "AI Preamble", severity: "medium" },
+  { pattern: /\bI[''’]?ve\s+(drafted|written|created|prepared|provided|generated|offered|included)\s+(\d+|two|three|four|five|several|multiple|alternative|different)\s+(options?|versions?|alternatives?|endings?|drafts?|variations?)\b/gi, category: "AI Preamble", severity: "medium" },
+  { pattern: /\bmaking\s+\w+(\s+\w+)?\s+(more|less|even\s+more)\s+(relatable|sympathetic|likeable|mysterious|grounded|believable|human|memorable)\b/gi, category: "AI Preamble", severity: "medium" },
+  { pattern: /\bdo\s+you\s+want\s+me\s+to\s+\w+/gi, category: "AI Closing", severity: "medium" },
+  { pattern: /\bif\s+you\s+(want|'d\s+like|prefer|like),?\s+I\s+can\s+(also|even\s+)?(create|write|generate|provide|offer|draft|do|make|add|expand|explore)\b/gi, category: "AI Closing", severity: "medium" },
+  { pattern: /\blet\s+me\s+know\s+which\s+(one|option|version|ending|draft|variation|direction|approach)\b/gi, category: "AI Closing", severity: "medium" },
+  { pattern: /\bmake\s+the\s+tone\s+(more|less|extra)\s+\w+/gi, category: "Prompt Instruction", severity: "high" },
+  { pattern: /\benhance\s+(this|the|my)\s+(scene|passage|section|chapter|dialogue|description|paragraph|draft)\s+to\s+be\s+(more|less)\b/gi, category: "Prompt Instruction", severity: "high" },
+  { pattern: /\balign\s+(more\s+)?with\s+.{1,40}?(style|voice|tone|writing|prose)\b/gi, category: "Prompt Instruction", severity: "high" },
+  { pattern: /\bfocus\s+on\s+\w+(?:[''’]s|s')\s+(internal|emotional|mental|character|psychological)\s+(struggle|journey|development|arc|conflict|monologue)\b/gi, category: "Prompt Instruction", severity: "high" },
+  { pattern: /\bensure\s+(the|each|all)\s+characters?\s+(use|have|display|show|feel|sound|avoid|stay)\b/gi, category: "Prompt Instruction", severity: "high" },
+  { pattern: /\bcheck\s+(this|the|my)\s+(scene|passage|chapter|text|story|plot|draft|piece|manuscript)\s+for\s+(logic|inconsistencies|plot\s+holes|errors|issues|problems|gaps|continuity)\b/gi, category: "Prompt Instruction", severity: "high" },
+  { pattern: /\bupdate\s+the\s+(glossary|index|summary|timeline|character\s+list|synopsis|outline|notes?)\s+(based\s+on|for|with|to\s+reflect)\b/gi, category: "Prompt Instruction", severity: "high" },
+  { pattern: /\bwrite\s+a\s+\d{3,}[\s-]?word\s+(chapter|article|post|section|scene|story|essay|piece|blog)\b/gi, category: "Prompt Instruction", severity: "high" },
+  { pattern: /\btranslate\s+(this|the|my)\s+(text|dialogue|passage|sentence|paragraph|section|line|excerpt)\s+(into|to)\b/gi, category: "Prompt Instruction", severity: "high" },
+  { pattern: /\bwhere\s+(the\s+)?(protagonist|antagonist|hero|villain|main\s+character|narrator)\s+(faces|encounters|discovers|must|struggles|fights|battles|confronts)\b/gi, category: "Prompt Instruction", severity: "medium" },
+  { pattern: /\b(intensity|spice|violence|tension|heat|romance|action|angst)\s+\d+(\s*[,·•|/]\s*(intensity|spice|violence|tension|heat|romance|action|angst)\s+\d+)+\b/gi, category: "Prompt Instruction", severity: "high" },
+
   // MEDIUM: AI structural tells
   { pattern: /\bit[''\u2019]?s\s+not\s+(just|only)\s+(about\s+)?\w+[,;]\s*(it[''\u2019]?s|but)\s+(about|also)\b/gi, category: "AI Structure", severity: "medium" },
   { pattern: /\bthis\s+isn[''\u2019]?t\s+just\s+(about\s+)?\w+[,;]\s*(it[''\u2019]?s|but)\b/gi, category: "AI Structure", severity: "medium" },
@@ -536,13 +577,21 @@ const RULES = [
   { pattern: /[\u2705\u2611\u2714\u2716\u274C\u274E]/g, category: "AI Emoji Bullet", severity: "medium" },
   { pattern: /[0-9]\uFE0F?\u20E3/g, category: "AI Numbered Emoji", severity: "medium" },
   { pattern: /[\u27A1\u2794\u27A4\u25B8\u25BA\u25B6\u23E9]\uFE0F?/g, category: "AI Arrow Bullet", severity: "medium" },
-  { pattern: /[\uD83D\uDE80\uD83C\uDFAF\uD83D\uDCA1\uD83D\uDD25]/gu, category: "AI Emoji", severity: "low" },
-  { pattern: /[\u2B50\uD83C\uDF1F\u2728]/gu, category: "AI Emoji", severity: "low" },
-  { pattern: /[\uD83D\uDCCA\uD83D\uDCC8\uD83C\uDFC6\uD83D\uDCAA\uD83D\uDC4D]/gu, category: "AI Emoji", severity: "low" },
-  { pattern: /[\uD83D\uDC49\uD83C\uDF89\u26A1\uD83D\uDCA5\uD83D\uDC8E]/gu, category: "AI Emoji", severity: "low" },
-  { pattern: /[\uD83D\uDCDD\uD83D\uDCCC\uD83D\uDCCB\uD83D\uDCE2]/gu, category: "AI Emoji", severity: "low" },
-  { pattern: /[\u26A0\u2757\u2755\u203C\u2049]/gu, category: "AI Emoji", severity: "low" },
-  { pattern: /[\u2022\u25CF\u25CB\u25AA\u25AB\u25FE\u25FD]/g, category: "AI Bullet", severity: "low" },
+  // v2.3 — more granular emoji rules (synced with extension)
+  { pattern: /[\uD83D\uDE80]/gu, category: "AI Emoji", severity: "low" },
+  { pattern: /[\uD83C\uDFAF]/gu, category: "AI Emoji", severity: "low" },
+  { pattern: /[\uD83D\uDCA1]/gu, category: "AI Emoji", severity: "low" },
+  { pattern: /[\uD83D\uDD25]/gu, category: "AI Emoji", severity: "low" },
+  { pattern: /[\u2B50\uD83C\uDF1F\u2728\u2734\u2733]/gu, category: "AI Emoji", severity: "low" },
+  { pattern: /[\uD83D\uDCCA\uD83D\uDCC8\uD83D\uDCC9]/gu, category: "AI Emoji", severity: "low" },
+  { pattern: /[\uD83C\uDFC6\uD83E\uDD47\uD83E\uDD48\uD83E\uDD49]/gu, category: "AI Emoji", severity: "low" },
+  { pattern: /[\uD83D\uDCAA\uD83D\uDC4D\uD83D\uDC4F\uD83D\uDE4C]/gu, category: "AI Emoji", severity: "low" },
+  { pattern: /[\uD83D\uDC49\uD83D\uDC48]/gu, category: "AI Emoji", severity: "low" },
+  { pattern: /[\uD83C\uDF89\uD83C\uDF8A\u2764\uFE0F?]/gu, category: "AI Emoji", severity: "low" },
+  { pattern: /[\uD83D\uDCDD\uD83D\uDCCC\uD83D\uDCCB\uD83D\uDCE2\uD83D\uDCE3]/gu, category: "AI Emoji", severity: "low" },
+  { pattern: /[\u26A1\uD83D\uDCA5\uD83D\uDC8E\uD83D\uDD11\uD83D\uDD12\uD83D\uDD13]/gu, category: "AI Emoji", severity: "low" },
+  { pattern: /[\u26A0\uFE0F?\u2757\u2755\u2753\u2754\u203C\u2049]/gu, category: "AI Emoji", severity: "low" },
+  { pattern: /[\u2022\u25CF\u25CB\u25AA\u25AB\u25FE\u25FD\u2023\u29BF]/g, category: "AI Bullet", severity: "low" },
 ];
 
 // ── Sweep ──
