@@ -1,9 +1,15 @@
-// Prompt Sweeper Detection Engine v2.4
+// Prompt Sweeper Detection Engine v2.6
 // Categories: Prompt Residue, AI Slop, Structural Tells, Prompt Injection
 // Ported from Chrome extension for Electron (CommonJS)
 // v2.3: +15 patterns — marketing superlatives, agency boilerplate, hollow value claims
 // v2.4: +18 patterns — creative-writing prompt residue (style mimicry, character beats,
 //        iteration artifacts, word-count prompts, rating tags)
+// v2.5: +31 patterns — structural slop, list inflation, hedging, RAG/hallucination tells,
+//        circular reasoning, shallow explanation, low-information generics
+//        (also fixed ? being misflagged as emoji — ? was inside a character class)
+// v2.6: +28 patterns — conversational softeners, engagement bait, friendly
+//        over-personalization, hype language, rhetorical questions, sycophancy,
+//        non-committal wraps, CTA slop
 
 const RULES = [
 
@@ -119,6 +125,106 @@ const RULES = [
   // Fiction rating tags
   { pattern: /\b(intensity|spice|violence|tension|heat|romance|action|angst)\s+\d+(\s*[,·•|/]\s*(intensity|spice|violence|tension|heat|romance|action|angst)\s+\d+)+\b/gi, category: 'Prompt Instruction', severity: 'high' },
 
+  // ═══════════════════════════════════════════════════════════════
+  // v2.5 — Structural slop, list inflation, hedging, RAG/hallucination tells,
+  // circular reasoning, shallow explanation, low-information generics
+  // ═══════════════════════════════════════════════════════════════
+
+  // Structural openers — "let's [verb]" overuse, listicle headers, article openings
+  { pattern: /\blet['’]?s\s+(go\s+(over|deeper|through|into|further)|understand|analyze|examine|simplify|look\s+(at|into)|wrap\s+(it|this)\s+up|conclude|get\s+into\s+it)\b/gi, category: 'AI Slop', severity: 'medium' },
+  { pattern: /\bhere\s+(are|is)\s+(the\s+)?(top\s+)?\d+\s+(key\s+)?(reasons?|points?|things?|ways?|steps?|tips?|tricks?|methods?|strategies|takeaways?)\b/gi, category: 'AI Slop', severity: 'medium' },
+  { pattern: /\bin\s+this\s+(article|post|guide|piece|essay|chapter|section),?\s+(we\s+)?(will|'ll)\s+(explore|discuss|examine|cover|look\s+at|dive\s+into)\b/gi, category: 'AI Slop', severity: 'medium' },
+  { pattern: /\bthis\s+guide\s+will\s+walk\s+you\s+through\b/gi, category: 'AI Slop', severity: 'medium' },
+  { pattern: /\bhere['’]?s\s+everything\s+you\s+need\s+to\s+know\b/gi, category: 'AI Slop', severity: 'medium' },
+  { pattern: /\bbreaking\s+(it|this)\s+down\s+(simply|further|step\s+by\s+step)\b/gi, category: 'AI Slop', severity: 'medium' },
+
+  // List inflation
+  { pattern: /\bthere\s+are\s+(many|several|multiple|various|countless|numerous|different|a\s+(number|variety|range)\s+of)\s+(reasons|benefits|advantages|factors|ways|examples|possibilities|approaches|methods|strategies|solutions|techniques|options|considerations|perspectives|aspects)\b/gi, category: 'AI Slop', severity: 'medium' },
+
+  // Filler / hedging extensions
+  { pattern: /\b(it\s+should\s+be\s+noted|it\s+is\s+worth\s+mentioning|it\s+bears\s+mentioning|it\s+is\s+worth\s+highlighting)\b/gi, category: 'AI Filler', severity: 'low' },
+  { pattern: /\bin\s+(modern\s+times|many\s+cases|some\s+situations|most\s+cases)\b/gi, category: 'AI Filler', severity: 'low' },
+  { pattern: /\bthere\s+is\s+no\s+one[\s-]size[\s-]fits[\s-]all\b/gi, category: 'AI Slop', severity: 'medium' },
+  { pattern: /\bthis\s+is\s+(a\s+complex|a\s+nuanced|highly\s+nuanced|quite\s+complex|fairly\s+complex)\s+(topic|issue|subject|matter|area)\b/gi, category: 'AI Slop', severity: 'medium' },
+  { pattern: /\bthis\s+(plays\s+a\s+key\s+role|cannot\s+be\s+overlooked|is\s+crucial\s+to\s+understand|is\s+essential\s+to\s+consider|is\s+an\s+important\s+consideration)\b/gi, category: 'AI Slop', severity: 'medium' },
+  { pattern: /\b(broadly|generally|typically|historically)\s+speaking\b/gi, category: 'AI Filler', severity: 'low' },
+
+  // Circular reasoning
+  { pattern: /\bthis\s+is\s+(important|valuable|effective|beneficial|useful|relevant|necessary|required|significant)\s+because\s+it\s+(matters|functions|works|is|has|provides|helps|relates|is\s+(needed|mandatory|important))\b/gi, category: 'AI Slop', severity: 'medium' },
+
+  // Authority illusion / variability hedging
+  { pattern: /\bdepends\s+on\s+your\s+(needs|goals|situation|use\s+case|environment|setup|approach|preferences|context|specific\s+\w+)\b/gi, category: 'AI Slop', severity: 'medium' },
+  { pattern: /\b(varies\s+(widely|by\s+context|from\s+case\s+to\s+case)|highly\s+(dependent|context[\s-]dependent)|requires\s+careful\s+consideration|depends\s+on\s+(many|several|multiple|various)\s+factors)\b/gi, category: 'AI Filler', severity: 'low' },
+  { pattern: /\bthere\s+(are\s+(several|multiple)\s+considerations|is\s+no\s+(simple|single|one)\s+answer)\b/gi, category: 'AI Slop', severity: 'medium' },
+
+  // Relevance drift — "zooming out" framing
+  { pattern: /\b(zooming\s+out|looking\s+at\s+the\s+bigger\s+picture|stepping\s+back\s+for\s+a\s+moment|expanding\s+beyond\s+this)\b/gi, category: 'AI Slop', severity: 'medium' },
+
+  // Mirror slop / circular how-tos (regex backreference)
+  { pattern: /\bto\s+(improve|optimize|enhance|increase|boost|grow|scale)\s+(\w+),?\s+(improve|optimize|enhance|increase|boost|grow|scale|make\s+it\s+more)\s+(?:your\s+|the\s+|that\s+|this\s+|its\s+)?\2\b/gi, category: 'AI Slop', severity: 'medium' },
+
+  // Fake specificity (numeric step claims)
+  { pattern: /\b(use|apply|follow|implement)\s+(exactly\s+)?\d+\s+(steps|techniques|methods|principles|rules|strategies|approaches|tactics|tips|tricks|secrets|hacks)\b/gi, category: 'AI Slop', severity: 'medium' },
+
+  // Conclusion / transition artifacts
+  { pattern: /\b(to\s+wrap\s+(things|it)\s+up|in\s+summary|to\s+conclude|in\s+the\s+final\s+analysis|all\s+things\s+considered|taking\s+everything\s+into\s+account)\b/gi, category: 'AI Transition', severity: 'low' },
+  { pattern: /\bas\s+(we\s+(have\s+(seen|covered|explored|discussed|examined)|discussed|covered|explored|examined|noted|mentioned)|previously\s+(noted|discussed|mentioned)|outlined\s+above|(described|explained)\s+(above|earlier)|mentioned\s+earlier|discussed\s+above)\b/gi, category: 'AI Transition', severity: 'low' },
+
+  // Corporate speak (extends drive/deliver buzzword set)
+  { pattern: /\b(enable|facilitate|accelerate|achieve|enhance|leverage)\s+(scalability|transformation|productivity|innovation|capabilities|alignment|performance|growth|outcomes|synergies|workflows?)\b/gi, category: 'AI Buzzword', severity: 'low' },
+
+  // Shallow explanation patterns
+  { pattern: /\bthis\s+(improves|enhances|increases|boosts|reduces)\s+(performance|efficiency|speed|results|output|quality|cost|time|accuracy|reliability|stability|usability|flexibility|scalability|effectiveness|consistency|outcomes)\b/gi, category: 'AI Slop', severity: 'low' },
+
+  // RAG / unsourced citation slop
+  { pattern: /\b(according\s+to\s+(the\s+)?(sources|provided\s+context)|based\s+on\s+(the\s+)?(retrieved|provided)\s+(data|information|content|context|sources)|the\s+information\s+(suggests|indicates|reveals|shows)|multiple\s+sources\s+(indicate|suggest|show|confirm)|retrieved\s+content\s+shows|context\s+indicates)\b/gi, category: 'AI Slop', severity: 'high' },
+  { pattern: /\b(research\s+indicates|studies\s+(suggest|reveal)|evidence\s+(shows|suggests)|reports\s+(indicate|show)|findings\s+(indicate|reveal))\b/gi, category: 'AI Slop', severity: 'low' },
+
+  // Hallucination-adjacent ("widely known" without citation)
+  { pattern: /\bthis\s+is\s+(widely|commonly|generally|often|typically|usually)\s+(known|accepted|true|believed|understood|assumed|recognized|acknowledged|agreed|stated|cited|reported|observed|seen|referenced)\b/gi, category: 'AI Slop', severity: 'medium' },
+
+  // Over-sanitized hedging
+  { pattern: /\bit\s+(may|might|could)\s+(be\s+(possible|considered|argued|suggested|noted|seen|interpreted)|appear|seem|indicate|suggest|imply|reflect|represent|demonstrate|highlight|depend|differ|vary)\b/gi, category: 'AI Filler', severity: 'low' },
+
+  // Instruction failure — verbose preambles when brevity was requested
+  { pattern: /\bhere\s+is\s+(a|an|the)\s+(detailed|comprehensive|long[\s-]form|expanded|full|thorough|in[\s-]depth|complete)\s+(explanation|guide|breakdown|response|overview|version|analysis|deep\s+dive)\b/gi, category: 'AI Preamble', severity: 'medium' },
+  { pattern: /\blet['’]?s\s+(go\s+(into|in)\s+detail|dive\s+into\s+detail|explore\s+(deeply|extensively))\b/gi, category: 'AI Slop', severity: 'medium' },
+
+  // Low-information generic phrases
+  { pattern: /\b(it|this)\s+(does|involves|affects|changes|impacts|influences|modifies|alters)\s+(things|stuff|something|somehow)\b/gi, category: 'AI Slop', severity: 'low' },
+
+  // ═══════════════════════════════════════════════════════════════
+  // v2.6 — Conversational softeners, engagement bait, hype, sycophancy
+  // ═══════════════════════════════════════════════════════════════
+  { pattern: /^(hey|hi|hello|alright|okay|ok|sure\s+thing|got\s+it|good\s+news|don['’]?t\s+worry|no\s+worries),?[\s—:!]+/gim, category: 'AI Slop', severity: 'medium' },
+  { pattern: /\blet['’]?s\s+(clear\s+(this|it)\s+up|make\s+sense\s+of|walk\s+through|get\s+you\s+sorted|keep\s+(things|it)\s+(straightforward|simple)|make\s+(this|it)\s+(super\s+)?(simple|easy))\b/gi, category: 'AI Slop', severity: 'medium' },
+  { pattern: /\bhere['’]?s\s+(the\s+)?(deal|gist|quick\s+(version|answer|breakdown)|simple\s+(version|answer)|short\s+answer)\b/gi, category: 'AI Slop', severity: 'medium' },
+  { pattern: /\bif\s+you\s+(want|'d\s+like|prefer|like|need),?\s+you\s+(can|could|may|might)\b/gi, category: 'AI Filler', severity: 'low' },
+  { pattern: /\byou\s+(might|may|could)\s+(want\s+to|consider|try)\b/gi, category: 'AI Filler', severity: 'low' },
+  { pattern: /^(optionally|if\s+(applicable|needed|appropriate|relevant|helpful)),?\s/gim, category: 'AI Filler', severity: 'low' },
+  { pattern: /\b(want|need)\s+(me\s+to\s+\w+|a\s+(quick\s+)?(summary|example|breakdown|recap|version)|a\s+(simpler|shorter|longer|more\s+detailed)\s+version)\?/gi, category: 'AI Closing', severity: 'medium' },
+  { pattern: /\bhappy\s+to\s+(expand|elaborate|clarify|help|explain|provide|add|share)\b/gi, category: 'AI Closing', severity: 'medium' },
+  { pattern: /\bI\s+can\s+(also\s+)?(explain|expand|elaborate|provide|share|show|walk\s+you\s+through|customize|turn\s+this\s+into|break\s+this\s+down|go\s+deeper|make\s+this|give\s+you|add)\b/gi, category: 'AI Closing', severity: 'medium' },
+  { pattern: /\bjust\s+(tell|let)\s+me\s+(know\s+)?if\s+you\s+(want|need|prefer)\b/gi, category: 'AI Closing', severity: 'medium' },
+  { pattern: /\blet\s+me\s+know\s+if\s+(that|this)\s+(helps|works|is\s+(helpful|useful|enough|clear))\b/gi, category: 'AI Closing', severity: 'medium' },
+  { pattern: /\b(I['’]?ve|we['’]?ve)\s+got\s+(you|this)\b/gi, category: 'AI Slop', severity: 'medium' },
+  { pattern: /\byou['’]?re\s+(in\s+the\s+right\s+place|on\s+the\s+right\s+track|asking\s+(the\s+right|smart|great)\s+question|not\s+alone|definitely\s+not\s+the\s+only|doing\s+(great|fine|well)|already\s+ahead|closer\s+than\s+you\s+think|almost\s+there|making\s+progress|thinking\s+(deeply|critically|carefully)|approaching\s+this\s+(well|correctly)|moving\s+in\s+the\s+right\s+direction|getting\s+it|understanding\s+this|picking\s+this\s+up\s+(quickly|fast))\b/gi, category: 'AI Slop', severity: 'medium' },
+  { pattern: /^(basically|honestly|literally|obviously|clearly|essentially),?\s/gim, category: 'AI Filler', severity: 'low' },
+  { pattern: /\bto\s+be\s+honest,/gi, category: 'AI Filler', severity: 'low' },
+  { pattern: /\bas\s+you\s+(can\s+see|might\s+expect|probably\s+know|may\s+know)\b/gi, category: 'AI Filler', severity: 'low' },
+  { pattern: /\bthis\s+is\s+(huge|massive|incredible|impressive|outstanding|amazing|next[\s-]level|groundbreaking|highly\s+(impactful|optimized|effective)|incredibly\s+(powerful|effective|important|useful)|super\s+(useful|powerful|important)|extremely\s+(important|powerful|effective)|really\s+powerful|very\s+effective)\b/gi, category: 'AI Slop', severity: 'medium' },
+  { pattern: /\b(why\s+does\s+this\s+matter|so\s+what\s+does\s+this\s+mean|why\s+is\s+this\s+important|what['’]?s\s+(the\s+(takeaway|impact|result|key\s+idea)|going\s+on\s+here)|how\s+(does\s+this\s+work|can\s+you\s+use\s+this)|what\s+(should\s+you\s+(do|know|consider)|happens\s+next|does\s+this\s+(tell|imply|suggest|change|affect|lead\s+to)))\?/gi, category: 'AI Slop', severity: 'medium' },
+  { pattern: /\b(quick\s+summary|short\s+answer|in\s+short|TL[\s;]*DR|key\s+takeaway|bottom\s+line|main\s+idea|at\s+a\s+glance|in\s+brief|simply\s+put|in\s+simple\s+terms|in\s+a\s+nutshell|here['’]?s\s+the\s+gist|core\s+idea|main\s+point|primary\s+takeaway):/gi, category: 'AI Slop', severity: 'low' },
+  { pattern: /\bstep\s+\d+\s*:\s*(understand|analyze|apply|review|improve|consider|implement|start|begin|continue|follow|do)/gi, category: 'AI Slop', severity: 'medium' },
+  { pattern: /\b(make\s+sure\s+to|don['’]?t\s+forget\s+to|be\s+sure\s+to|always\s+remember\s+to|keep\s+in\s+mind)\b/gi, category: 'AI Filler', severity: 'low' },
+  { pattern: /\bclick\s+here\s+to\s+(continue|proceed|begin|start|learn\s+more)\b/gi, category: 'AI Slop', severity: 'medium' },
+  { pattern: /\bdouble[\s-]check\s+your\s+(entries|inputs|details|information)\b/gi, category: 'AI Slop', severity: 'low' },
+  { pattern: /\b(to\s+(clarify|elaborate|simplify)|for\s+clarity|to\s+(make\s+(this|it)\s+(clear|easier)|help\s+you\s+understand|provide\s+(insight|context|more\s+detail|clarity)|give\s+context|add\s+clarity|improve\s+understanding|explain\s+further|expand\s+on\s+this|go\s+deeper|break\s+this\s+down))\b/gi, category: 'AI Slop', severity: 'medium' },
+  { pattern: /\b(that['’]?s\s+(a\s+)?(great|good|excellent|nice|fair|valid|true|fantastic)\s+(point|question|observation|insight|catch)|good\s+(question|observation|catch|point)|excellent\s+question|nice\s+(catch|point)|great\s+insight|well\s+said|totally\s+understandable|that\s+makes\s+sense|you['’]?re\s+absolutely\s+right)\b/gi, category: 'AI Slop', severity: 'medium' },
+  { pattern: /\bit['’]?s\s+(situational|context[\s-]dependent|not\s+always\s+clear|hard\s+to\s+say|difficult\s+to\s+determine|not\s+straightforward|not\s+definitive|not\s+(fixed|absolute|guaranteed|certain))\b/gi, category: 'AI Filler', severity: 'low' },
+  { pattern: /\bit\s+ultimately\s+depends\b/gi, category: 'AI Filler', severity: 'low' },
+  { pattern: /\b(try\s+this\s+today|take\s+action|begin\s+today|don['’]?t\s+wait|act\s+now|give\s+it\s+a\s+try|see\s+for\s+yourself|take\s+the\s+next\s+step|level\s+up|upgrade\s+your\s+approach|boost\s+your\s+results|improve\s+today)\b/gi, category: 'AI Slop', severity: 'medium' },
+
   { pattern: /\bit['’]?s\s+not\s+(just|only)\s+(about\s+)?\w+[,;]\s*(it['’]?s|but)\s+(about|also)\b/gi, category: 'AI Structure', severity: 'medium' },
   { pattern: /\bthis\s+isn['’]?t\s+just\s+(about\s+)?\w+[,;]\s*(it['’]?s|but)\b/gi, category: 'AI Structure', severity: 'medium' },
 
@@ -192,10 +298,10 @@ const RULES = [
   { pattern: /[\uD83C\uDFC6\uD83E\uDD47\uD83E\uDD48\uD83E\uDD49]/gu, category: 'AI Emoji', severity: 'low' },
   { pattern: /[\uD83D\uDCAA\uD83D\uDC4D\uD83D\uDC4F\uD83D\uDE4C]/gu, category: 'AI Emoji', severity: 'low' },
   { pattern: /[\uD83D\uDC49\uD83D\uDC48]/gu, category: 'AI Emoji', severity: 'low' },
-  { pattern: /[\uD83C\uDF89\uD83C\uDF8A\u2764\uFE0F?]/gu, category: 'AI Emoji', severity: 'low' },
+  { pattern: /[\uD83C\uDF89\uD83C\uDF8A\u2764]\uFE0F?/gu, category: 'AI Emoji', severity: 'low' },
   { pattern: /[\uD83D\uDCDD\uD83D\uDCCC\uD83D\uDCCB\uD83D\uDCE2\uD83D\uDCE3]/gu, category: 'AI Emoji', severity: 'low' },
   { pattern: /[\u26A1\uD83D\uDCA5\uD83D\uDC8E\uD83D\uDD11\uD83D\uDD12\uD83D\uDD13]/gu, category: 'AI Emoji', severity: 'low' },
-  { pattern: /[\u26A0\uFE0F?\u2757\u2755\u2753\u2754\u203C\u2049]/gu, category: 'AI Emoji', severity: 'low' },
+  { pattern: /[\u26A0\u2757\u2755\u2753\u2754\u203C\u2049]\uFE0F?/gu, category: 'AI Emoji', severity: 'low' },
 
   { pattern: /[\u2022\u25CF\u25CB\u25AA\u25AB\u25FE\u25FD\u2023\u29BF]/g, category: 'AI Bullet', severity: 'low' },
 ];
